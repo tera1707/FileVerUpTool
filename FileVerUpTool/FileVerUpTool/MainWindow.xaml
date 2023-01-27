@@ -1,0 +1,79 @@
+<Window
+    x:Class="FileVerUpTool.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:FileVerUpTool"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+    mc:Ignorable="d">
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- 読み込み -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="TargetDirBox" PlaceholderText="Input Solution folder path." Margin="5"/>
+            <Button Grid.Column="1" Click="myButton_Click" Content="Read .csproj" Margin="5" Background="Blue"/>
+        </Grid>
+        
+        <!-- csproj内容表示 -->
+        <controls:DataGrid x:Name="CsprojDataGrid" Grid.Row="1" Margin="10" MinHeight="50"
+                           ItemsSource="{x:Bind DataList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" GridLinesVisibility="All">
+            <controls:DataGrid.Resources>
+                <local:FileFullPathToProjectName x:Key="FileFullPathToProjectName" />
+            </controls:DataGrid.Resources>
+            <controls:DataGrid.Columns>
+                <controls:DataGridTextColumn Header="Project" Binding="{Binding FileFullPath, Converter={StaticResource FileFullPathToProjectName}}" />
+                <controls:DataGridTextColumn Header="Version" Binding="{Binding Version}"/>
+                <controls:DataGridTextColumn Header="AssemblyVersion" Binding="{Binding AssemblyVersion}"/>
+                <controls:DataGridTextColumn Header="Authors" Binding="{Binding Authors}"/>
+                <controls:DataGridTextColumn Header="Company" Binding="{Binding Company}"/>
+                <controls:DataGridTextColumn Header="Product" Binding="{Binding Product}"/>
+                <controls:DataGridTextColumn Header="Copyright" Binding="{Binding Copyright}"/>
+                <controls:DataGridTextColumn Header="Description" Binding="{Binding Description}"/>
+                <controls:DataGridTextColumn Header="NeutralLanguage" Binding="{Binding NeutralLanguage}"/>
+            </controls:DataGrid.Columns>
+        </controls:DataGrid>
+
+        <!-- 書き込み -->
+        <Button Click="Button_Click" Grid.Row="2" Content="Write .csproj" HorizontalAlignment="Center" Background="DarkOrange"/>
+
+        <!-- 一括設定項目の種類選択Combo・入力Box -->
+        <StackPanel Grid.Row="3" BorderBrush="SpringGreen" BorderThickness="2" Margin="15">
+            <TextBlock Text="Ikkatsu Settei" HorizontalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <ComboBox x:Name="IkkatsuType" SelectedIndex="0" Margin="5">
+                    <x:String>Version</x:String>
+                    <x:String>AssemblyVersion</x:String>
+                    <x:String>Authors</x:String>
+                    <x:String>Company</x:String>
+                    <x:String>Product</x:String>
+                    <x:String>Description</x:String>
+                    <x:String>Copyright</x:String>
+                    <x:String>NeutralLanguage</x:String>
+                </ComboBox>
+
+                <TextBlock Text="->" Margin="5" FontSize="30"/>
+
+                <TextBox x:Name="IkkatsuValue" Margin="5" Width="200"/>
+
+                <TextBlock Text="->" Margin="5" FontSize="30"/>
+
+                <Button x:Name="IkkatsuButton" Margin="5" Click="IkkatsuButton_Click" Content=" Ikkatsu Settie Button" Background="DarkRed"/>
+            </StackPanel>
+        </StackPanel>
+        
+
+
+    </Grid>
+</Window>
