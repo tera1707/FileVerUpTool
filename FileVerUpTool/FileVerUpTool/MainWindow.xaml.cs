@@ -18,36 +18,13 @@ namespace FileVerUpTool
     public sealed partial class MainWindow : Window
     {
         string targetExt = "*.csproj";
-        List<string> foundList = new();
 
         public MainWindow()
         {
             this.InitializeComponent();
 
-           // CsprojDataGrid.ItemsSource = DataList;
-            CsprojDataGrid.CellEditEnded += CsprojDataGrid_CellEditEnded;
-            CsprojDataGrid.CellEditEnding += CsprojDataGrid_CellEditEnding;
-            CsprojDataGrid.PointerPressed += CsprojDataGrid_PointerPressed;
-
             // DEBUG
             TargetDirBox.Text = @"C:\Users\masa\source\repos\FlyoutableToggleButtonJikken";
-        }
-
-        private void CsprojDataGrid_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            Debug.WriteLine(sender.GetType());
-            Debug.WriteLine(sender is DataGridColumnHeader);
-        }
-
-        private void CsprojDataGrid_CellEditEnding(object sender, CommunityToolkit.WinUI.UI.Controls.DataGridCellEditEndingEventArgs e)
-        {
-
-        }
-
-        private void CsprojDataGrid_CellEditEnded(object sender, CommunityToolkit.WinUI.UI.Controls.DataGridCellEditEndedEventArgs e)
-        {
-            var row = e.Row;
-            var column = e.Column;
         }
 
         public ObservableCollection<ModuleMetaData> DataList { get; set; } = new ObservableCollection<ModuleMetaData>();
@@ -70,7 +47,7 @@ namespace FileVerUpTool
 
             // 指定フォルダ以下のcsprojファイルを検索
             var ssef = new SearchSpecifiedExtFile(targetDir, targetExt);
-            foundList = ssef.Search();
+            var foundList = ssef.Search();
 
             // エラー：指定のフォルダの中にcsprojファイルが見つからなかった
             if (foundList.Count == 0)
@@ -79,23 +56,33 @@ namespace FileVerUpTool
             // 見つかった奴を表示する
             foundList.ForEach(x =>
             {
-                Debug.WriteLine(x);
+                var reader = new SdkTypeCsprojHandler();
+                var data = reader.Read(x);
 
-                XElement xml = XElement.Load(x);
+                DataList.Add(data);
+            });
+        }
 
-                //---------------------------------
+        // csprojを読み書きするクラス
+        public class SdkTypeCsprojHandler
+        {
+            public SdkTypeCsprojHandler() { }
+
+            public ModuleMetaData? Read(string  csprojPath)
+            {
+                XElement xml = XElement.Load(csprojPath);
 
                 // 欲しい奴だけ取る
-                #region 欲しい奴だけ取る
+                //#region 欲しい奴だけ取る
                 var infos = xml.Elements("PropertyGroup");
 
                 if (infos is null)
-                    return;
+                    return null;
 
                 var pg = infos.FirstOrDefault();
 
                 if (pg is null)
-                    return;
+                    return null;
 
                 var ver = ReturnNullIfThrowException(() => pg.Elements("Version"));
                 var aver = ReturnNullIfThrowException(() => pg.Elements("AssemblyVersion"));
@@ -103,25 +90,17 @@ namespace FileVerUpTool
                 var company = ReturnNullIfThrowException(() => pg.Elements("Company"));
                 var product = ReturnNullIfThrowException(() => pg.Elements("Product"));
                 var description = ReturnNullIfThrowException(() => pg.Elements("Description"));
-                var copyright = ReturnNullIfThrowException(() => pg.Elements("Copyright")); 
-                var newtralLang = ReturnNullIfThrowException(() => pg.Elements("NeutralLanguage")); 
+                var copyright = ReturnNullIfThrowException(() => pg.Elements("Copyright"));
+                var newtralLang = ReturnNullIfThrowException(() => pg.Elements("NeutralLanguage"));
 
-                Debug.WriteLine($"{x}, {ver}, {aver}, {author}, {company}, {product}, {description}, {copyright}, {newtralLang}");
+                Debug.WriteLine($"{csprojPath}, {ver}, {aver}, {author}, {company}, {product}, {description}, {copyright}, {newtralLang}");
 
-                // csproj 1件分のデータを作成 & 画面表示
-                DataList.Add(new ModuleMetaData(x, ver?.ToString(), aver?.ToString(), author?.ToString(), company?.ToString(),
-                                                    product?.ToString(), copyright?.ToString(), description?.ToString(), newtralLang?.ToString()));
-                #endregion
-            });
-        }
+                return new ModuleMetaData(csprojPath, ver?.ToString(), aver?.ToString(), author?.ToString(), company?.ToString(),
+                                            product?.ToString(), copyright?.ToString(), description?.ToString(), newtralLang?.ToString());
+            }
 
-        // 書き込みボタン
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            foreach(var data in DataList)
+            public void Write(ModuleMetaData data)
             {
-                // 書き込み
-
                 // まず、csprojを読み込み、中身の全テキストを保存（こいつを置換していく）
                 var all = File.ReadAllText(data.FileFullPath, System.Text.Encoding.UTF8);
 
@@ -142,7 +121,63 @@ namespace FileVerUpTool
                 all = SetValueForSpecifiedKey(all, input);
 
                 File.WriteAllText(data.FileFullPath, all);
+            }
 
+            private string ReturnNullIfThrowException(Func<IEnumerable<XElement>> getElementFunc)
+            {
+                string ret = null;
+
+                try
+                {
+                    ret = getElementFunc.Invoke().FirstOrDefault().Value;
+                }
+                catch (NullReferenceException)
+                {
+                    ret = null;
+                }
+
+                return ret;
+            }
+
+            private string SetValueForSpecifiedKey(string all, IReadOnlyCollection<(string ElementName, string Value)> input)
+            {
+                //var all = File.ReadAllText(x, System.Text.Encoding.UTF8);
+
+                foreach (var element in input)
+                {
+                    if (string.IsNullOrEmpty(element.Value))
+                        continue;
+
+                    // 指定の値で置き換える
+                    //var pattern = "\\<Version\\>.*\\<\\/Version\\>";
+                    var pattern = "\\<" + element.ElementName + "\\>.*\\<\\/" + element.ElementName + "\\>";
+
+                    if (!Regex.IsMatch(all, pattern))
+                    {
+                        // 指定のelementが無ければ
+                        // とりあえず、最初に見つけたPropertyGroupの最後のElementとして、無理やり指定のElementを入れてやる
+                        var temp = new Regex("</PropertyGroup>");
+                        var rep = "  <" + element.ElementName + "></" + element.ElementName + ">\r\n  </PropertyGroup>";
+                        all = temp.Replace(all, rep, 1);
+                    }
+
+                    // 指定の値で置換する
+                    var replace = "<" + element.ElementName + ">" + element.Value + "</" + element.ElementName + ">";//仮
+                    all = Regex.Replace(all, pattern, replace);
+                }
+                return all;
+            }
+        }
+
+
+
+        // 書き込みボタン
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            foreach(var data in DataList)
+            {
+                var writer = new SdkTypeCsprojHandler();
+                writer.Write(data);
             }
         }
 
@@ -162,34 +197,6 @@ namespace FileVerUpTool
             return ret;
         }
 
-        private string SetValueForSpecifiedKey(string all, IReadOnlyCollection<(string ElementName, string Value)> input)
-        {
-            //var all = File.ReadAllText(x, System.Text.Encoding.UTF8);
-
-            foreach (var element in input)
-            {
-                if (string.IsNullOrEmpty(element.Value))
-                    continue;
-
-                // 指定の値で置き換える
-                //var pattern = "\\<Version\\>.*\\<\\/Version\\>";
-                var pattern = "\\<" + element.ElementName + "\\>.*\\<\\/" + element.ElementName + "\\>";
-
-                if (!Regex.IsMatch(all, pattern))
-                {
-                    // 指定のelementが無ければ
-                    // とりあえず、最初に見つけたPropertyGroupの最後のElementとして、無理やり指定のElementを入れてやる
-                    var temp = new Regex("</PropertyGroup>");
-                    var rep = "  <" + element.ElementName + "></" + element.ElementName + ">\r\n  </PropertyGroup>";
-                    all = temp.Replace(all, rep, 1);
-                }
-
-                // 指定の値で置換する
-                var replace = "<" + element.ElementName + ">" + element.Value + "</" + element.ElementName + ">";//仮
-                all = Regex.Replace(all, pattern, replace);
-            }
-            return all;
-        }
 
         private void IkkatsuButton_Click(object sender, RoutedEventArgs e)
         {
