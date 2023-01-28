@@ -11,8 +11,25 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Windows.System;
 using Windows.UI.Popups;
 
+
+/*
+■おかしいところ
+・.netFW 元々データがないものに対して設定しようとしても、設定できない。(置換するものがないからだと思う)
+
+■要検討事項
+・,net6なのか、FWなのかの切り替えの判定方法が今てきとう。
+　見るファイルがcsprojなら.net6、そうでなければ(AssemblyInfo.csなら？)FWにしてるがそれでいいのか。（C++もみたいときにこまらないか？）
+・FWのためにAssemblyInfo.csを探すが、そういうファイル名、普通にありそう。
+　AssemblyInfo.csをみて、さらにそのなかのなにかをみて、ちゃんとバージョン情報を含んだものなのかを判定したほうがいい？
+　(例えば、最低、AssemblyVersionとAssemblyFileVersionはあるはずだからその2つがあれば正しい、とするとか。)
+
+■やりたいこと
+・Authorを消したい。いらんっぽい。
+
+*/
 namespace FileVerUpTool
 {
     public sealed partial class MainWindow : Window
@@ -29,7 +46,7 @@ namespace FileVerUpTool
 
         public ObservableCollection<ModuleMetaData> DataList { get; set; } = new ObservableCollection<ModuleMetaData>();
 
-
+        // Readボタン押下時
         private void myButton_Click(object sender, RoutedEventArgs e)
         {
             // 画面表示を一旦クリア
@@ -45,26 +62,166 @@ namespace FileVerUpTool
             if (!Directory.Exists(targetDir))
                 return;
 
+            //////////////////////////////
+            // sdkタイプのcsprojを検索
+            //////////////////////////////
+
             // 指定フォルダ以下のcsprojファイルを検索
             var ssef = new SearchSpecifiedExtFile(targetDir, targetExt);
             var foundList = ssef.Search();
 
             // エラー：指定のフォルダの中にcsprojファイルが見つからなかった
-            if (foundList.Count == 0)
-                return;
-
-            // 見つかった奴を表示する
-            foundList.ForEach(x =>
+            if (foundList.Count != 0)
             {
-                var reader = new SdkTypeCsprojHandler();
-                var data = reader.Read(x);
+                // 見つかった奴を表示する
+                foundList.ForEach(x =>
+                {
+                    // 本ちゃん
+                    var reader = new SdkTypeCsprojHandler();
+                    var data = reader.Read(x);
 
-                DataList.Add(data);
-            });
+                    if (data != null)
+                        DataList.Add(data);
+                });
+            }
+
+            //////////////////////////////
+            // .netFrameworkのAssemblyInfo.csを検索
+            //////////////////////////////
+
+            // 指定フォルダ以下のcsprojファイルを検索
+            var ssef2 = new SearchSpecifiedExtFile(targetDir, "AssemblyInfo.cs");
+            var foundList2 = ssef2.Search();
+
+            if (foundList2.Count != 0)
+            {
+                foundList2.ForEach(x =>
+                {
+                    var reader = new DotnetFrameworkProjHandler();
+                    var data = reader.Read(x);
+
+                    if (data != null)
+                        DataList.Add(data);
+                });
+            }
+
+        }
+
+
+        // 書き込みボタン
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var data in DataList)
+            {
+                if (System.IO.Path.GetExtension(data.FileFullPath) == ".csproj")
+                {
+                    var writer = new SdkTypeCsprojHandler();
+                    writer.Write(data);
+                }
+                else
+                {
+                    var writer = new DotnetFrameworkProjHandler();
+                    writer.Write(data);
+                }
+            }
+        }
+
+        // 一括入力
+        private void IkkatsuButton_Click(object sender, RoutedEventArgs e)
+        {
+            var ikkatsuType = IkkatsuType.SelectedValue as string;
+            var val = IkkatsuValue.Text;
+
+            setvalue(ikkatsuType, val);
+
+            // 指定の項目を一括設定をする
+            // ItemsSourceに入れたリストが更新されたときに、画面のリストも更新してくれるDataGrid.Refresh()みたいなメソッドが
+            // 無かったので、無理やりコピーをつくって入れ替えてる。
+            void setvalue(string propName, string val)
+            {
+                ObservableCollection<ModuleMetaData> tmp = new ObservableCollection<ModuleMetaData>();
+
+                // 無理やりコピーをつくる
+                for (int i = 0; i < DataList.Count; i++)
+                {
+                    tmp.Add(new ModuleMetaData(DataList[i].FileFullPath, DataList[i].Version, DataList[i].AssemblyVersion, DataList[i].Authors, DataList[i].Company,
+                                                DataList[i].Product, DataList[i].Copyright, DataList[i].Description, DataList[i].NeutralLanguage));
+                }
+
+                // 一括設定するものだけ、無理やり全csproj分入れてる
+                for (int i = 0; i < DataList.Count; i++)
+                {
+                    typeof(ModuleMetaData).GetProperty(propName).SetValue(tmp[i], val);
+                }
+
+                // 入れ替え
+                CsprojDataGrid.ItemsSource = tmp;
+            }
+
         }
 
         // csprojを読み書きするクラス
-        public class SdkTypeCsprojHandler
+        public interface IProjMetaDataHandler
+        {
+            ModuleMetaData? Read(string csprojPath);
+            void Write(ModuleMetaData data);
+        }
+
+        public class DotnetFrameworkProjHandler : IProjMetaDataHandler
+        {
+            public ModuleMetaData Read(string AssemblyInfoPath)
+            {
+                //var metadata = new ModuleMetaData();
+                string pjName = string.Empty;
+                string version = string.Empty;
+                string assemblyVersion = string.Empty;
+                string authors = string.Empty;
+                string company = string.Empty;
+                string product = string.Empty;
+                string copyright = string.Empty;
+                string description = string.Empty;
+                string neutralLanguage = string.Empty;
+
+                // まず、csprojを読み込み、中身の全テキストを保存（こいつを置換していく）
+                var lines = File.ReadAllLines(AssemblyInfoPath, System.Text.Encoding.UTF8);
+
+                foreach (var line in lines)
+                {
+                    if (line.Contains("AssemblyTitle")) pjName = line.Split("\"")[1];
+                    if (line.Contains("AssemblyVersion")) version = line.Split("\"")[1];
+                    //if (line.Contains("AssemblyVersion")) assemblyVersion = line.Split("\"")[1];
+                    if (line.Contains("AssemblyAuthors")) authors = line.Split("\"")[1];
+                    if (line.Contains("AssemblyCompany")) company = line.Split("\"")[1];
+                    if (line.Contains("AssemblyProduct")) product = line.Split("\"")[1];
+                    if (line.Contains("AssemblyCopyright")) copyright = line.Split("\"")[1];
+                    if (line.Contains("AssemblyDescription")) description = line.Split("\"")[1];
+                    if (line.Contains("NeutralResourcesLanguage")) neutralLanguage = line.Split("\"")[1];
+                }
+
+                return new ModuleMetaData(AssemblyInfoPath, version, assemblyVersion, authors, company, product, copyright, description, neutralLanguage);
+
+            }
+
+            public void Write(ModuleMetaData data)
+            {
+                var expBase = "(^|(?<=\r\n))\\[assembly: ";
+                var expBase2 = "\\(\".*\"\\)\\]";
+
+                var all = File.ReadAllText(data.FileFullPath, System.Text.Encoding.UTF8);
+
+                all = Regex.Replace(all, expBase + "AssemblyVersion" + expBase2, "[assembly: AssemblyVersion(\"" + data.Version + "\")]");
+                all = Regex.Replace(all, expBase + "AssemblyCompany" + expBase2, "[assembly: AssemblyCompany(\"" + data.Company + "\")]");
+                all = Regex.Replace(all, expBase + "AssemblyProduct" + expBase2, "[assembly: AssemblyProduct(\"" + data.Product + "\")]");
+                all = Regex.Replace(all, expBase + "AssemblyCopyright" + expBase2, "[assembly: AssemblyCopyright(\"" + data.Copyright + "\")]");
+                all = Regex.Replace(all, expBase + "AssemblyDescription" + expBase2, "[assembly: AssemblyDescription(\"" + data.Description + "\")]");
+                all = Regex.Replace(all, expBase + "NeutralResourcesLanguage" + expBase2, "[assembly: NeutralResourcesLanguage(\"" + data.NeutralLanguage + "\")]");
+
+                File.WriteAllText(data.FileFullPath, all);
+            }
+        }
+
+        // csprojを読み書きするクラス
+        public class SdkTypeCsprojHandler : IProjMetaDataHandler
         {
             public SdkTypeCsprojHandler() { }
 
@@ -170,66 +327,6 @@ namespace FileVerUpTool
         }
 
 
-
-        // 書き込みボタン
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            foreach(var data in DataList)
-            {
-                var writer = new SdkTypeCsprojHandler();
-                writer.Write(data);
-            }
-        }
-
-        private string ReturnNullIfThrowException(Func<IEnumerable<XElement>> getElementFunc)
-        {
-            string ret = null;
-
-            try
-            {
-                ret = getElementFunc.Invoke().FirstOrDefault().Value;
-            }
-            catch (NullReferenceException)
-            {
-                ret = null;
-            }
-
-            return ret;
-        }
-
-
-        private void IkkatsuButton_Click(object sender, RoutedEventArgs e)
-        {
-            var ikkatsuType = IkkatsuType.SelectedValue as string;
-            var val = IkkatsuValue.Text;
-
-            setvalue(ikkatsuType, val);
-
-            // 指定の項目を一括設定をする
-            // ItemsSourceに入れたリストが更新されたときに、画面のリストも更新してくれるDataGrid.Refresh()みたいなメソッドが
-            // 無かったので、無理やりコピーをつくって入れ替えてる。
-            void setvalue(string propName, string val)
-            {
-                ObservableCollection<ModuleMetaData> tmp = new ObservableCollection<ModuleMetaData>();
-
-                // 無理やりコピーをつくる
-                for (int i = 0; i < DataList.Count; i++)
-                {
-                    tmp.Add(new ModuleMetaData(DataList[i].FileFullPath, DataList[i].Version, DataList[i].AssemblyVersion, DataList[i].Authors, DataList[i].Company,
-                                                DataList[i].Product, DataList[i].Copyright, DataList[i].Description, DataList[i].NeutralLanguage));
-                }
-
-                // 一括設定するものだけ、無理やり全csproj分入れてる
-                for (int i = 0; i < DataList.Count; i++)
-                {
-                    typeof(ModuleMetaData).GetProperty(propName).SetValue(tmp[i], val);
-                }
-
-                // 入れ替え
-                CsprojDataGrid.ItemsSource = tmp;
-            }
-
-        }
     }
 
     public class ModuleMetaData 
