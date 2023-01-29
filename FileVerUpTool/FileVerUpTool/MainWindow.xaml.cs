@@ -1,4 +1,4 @@
-using CommunityToolkit.WinUI.UI.Controls;
+ï»¿using CommunityToolkit.WinUI.UI.Controls;
 using CommunityToolkit.WinUI.UI.Controls.Primitives;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Documents;
@@ -13,21 +13,23 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Windows.System;
 using Windows.UI.Popups;
+using static FileVerUpTool.MainWindow;
 
 
 /*
-¡‚¨‚©‚µ‚¢‚Æ‚±‚ë
-E.netFW Œ³Xƒf[ƒ^‚ª‚È‚¢‚à‚Ì‚É‘Î‚µ‚Äİ’è‚µ‚æ‚¤‚Æ‚µ‚Ä‚àAİ’è‚Å‚«‚È‚¢B(’uŠ·‚·‚é‚à‚Ì‚ª‚È‚¢‚©‚ç‚¾‚Æv‚¤)
+â– ãŠã‹ã—ã„ã¨ã“ã‚
+âœ….netFW å…ƒã€…ãƒ‡ãƒ¼ã‚¿ãŒãªã„ã‚‚ã®ã«å¯¾ã—ã¦è¨­å®šã—ã‚ˆã†ã¨ã—ã¦ã‚‚ã€è¨­å®šã§ããªã„ã€‚(ç½®æ›ã™ã‚‹ã‚‚ã®ãŒãªã„ã‹ã‚‰ã ã¨æ€ã†)
 
-¡—vŒŸ“¢–€
-E,net6‚È‚Ì‚©AFW‚È‚Ì‚©‚ÌØ‚è‘Ö‚¦‚Ì”»’è•û–@‚ª¡‚Ä‚«‚Æ‚¤B
-@Œ©‚éƒtƒ@ƒCƒ‹‚ªcsproj‚È‚ç.net6A‚»‚¤‚Å‚È‚¯‚ê‚Î(AssemblyInfo.cs‚È‚çH)FW‚É‚µ‚Ä‚é‚ª‚»‚ê‚Å‚¢‚¢‚Ì‚©BiC++‚à‚İ‚½‚¢‚Æ‚«‚É‚±‚Ü‚ç‚È‚¢‚©Hj
-EFW‚Ì‚½‚ß‚ÉAssemblyInfo.cs‚ğ’T‚·‚ªA‚»‚¤‚¢‚¤ƒtƒ@ƒCƒ‹–¼A•’Ê‚É‚ ‚è‚»‚¤B
-@AssemblyInfo.cs‚ğ‚İ‚ÄA‚³‚ç‚É‚»‚Ì‚È‚©‚Ì‚È‚É‚©‚ğ‚İ‚ÄA‚¿‚á‚ñ‚Æƒo[ƒWƒ‡ƒ“î•ñ‚ğŠÜ‚ñ‚¾‚à‚Ì‚È‚Ì‚©‚ğ”»’è‚µ‚½‚Ù‚¤‚ª‚¢‚¢H
-@(—á‚¦‚ÎAÅ’áAAssemblyVersion‚ÆAssemblyFileVersion‚Í‚ ‚é‚Í‚¸‚¾‚©‚ç‚»‚Ì2‚Â‚ª‚ ‚ê‚Î³‚µ‚¢A‚Æ‚·‚é‚Æ‚©B)
+â– è¦æ¤œè¨äº‹é …
+ãƒ»,net6ãªã®ã‹ã€FWãªã®ã‹ã®åˆ‡ã‚Šæ›¿ãˆã®åˆ¤å®šæ–¹æ³•ãŒä»Šã¦ãã¨ã†ã€‚ï¼ˆè¤‡æ•°å€‹æ‰€ã‚ã‚‹ï¼‰
+ã€€è¦‹ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ãŒcsprojãªã‚‰.net6ã€ãã†ã§ãªã‘ã‚Œã°(AssemblyInfo.csãªã‚‰ï¼Ÿ)FWã«ã—ã¦ã‚‹ãŒãã‚Œã§ã„ã„ã®ã‹ã€‚ï¼ˆC++ã‚‚ã¿ãŸã„ã¨ãã«ã“ã¾ã‚‰ãªã„ã‹ï¼Ÿï¼‰
+ãƒ»FWã®ãŸã‚ã«AssemblyInfo.csã‚’æ¢ã™ãŒã€ãã†ã„ã†ãƒ•ã‚¡ã‚¤ãƒ«åã€æ™®é€šã«ã‚ã‚Šãã†ã€‚
+ã€€AssemblyInfo.csã‚’ã¿ã¦ã€ã•ã‚‰ã«ãã®ãªã‹ã®ãªã«ã‹ã‚’ã¿ã¦ã€ã¡ã‚ƒã‚“ã¨ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±ã‚’å«ã‚“ã ã‚‚ã®ãªã®ã‹ã‚’åˆ¤å®šã—ãŸã»ã†ãŒã„ã„ï¼Ÿ
+ã€€(ä¾‹ãˆã°ã€æœ€ä½ã€AssemblyVersionã¨AssemblyFileVersionã¯ã‚ã‚‹ã¯ãšã ã‹ã‚‰ãã®2ã¤ãŒã‚ã‚Œã°æ­£ã—ã„ã€ã¨ã™ã‚‹ã¨ã‹ã€‚)
 
-¡‚â‚è‚½‚¢‚±‚Æ
-EAuthor‚ğÁ‚µ‚½‚¢B‚¢‚ç‚ñ‚Á‚Û‚¢B
+â– ã‚„ã‚ŠãŸã„ã“ã¨
+ãƒ»Authorã‚’æ¶ˆã—ãŸã„ã€‚ã„ã‚‰ã‚“ã£ã½ã„ã€‚
+ãƒ»ã‚¯ãƒ©ã‚¹åˆ†ã‘ã€‚
 
 */
 namespace FileVerUpTool
@@ -46,37 +48,37 @@ namespace FileVerUpTool
 
         public ObservableCollection<ModuleMetaData> DataList { get; set; } = new ObservableCollection<ModuleMetaData>();
 
-        // Readƒ{ƒ^ƒ“‰Ÿ‰º
+        // Readãƒœã‚¿ãƒ³æŠ¼ä¸‹æ™‚
         private void myButton_Click(object sender, RoutedEventArgs e)
         {
-            // ‰æ–Ê•\¦‚ğˆê’UƒNƒŠƒA
+            // ç”»é¢è¡¨ç¤ºã‚’ä¸€æ—¦ã‚¯ãƒªã‚¢
             DataList.Clear();
 
             var targetDir = TargetDirBox.Text;
 
-            // ƒGƒ‰[FƒtƒHƒ‹ƒ_‚ªw’è‚³‚ê‚Ä‚¢‚È‚¢
+            // ã‚¨ãƒ©ãƒ¼ï¼šãƒ•ã‚©ãƒ«ãƒ€ãŒæŒ‡å®šã•ã‚Œã¦ã„ãªã„
             if (string.IsNullOrEmpty(targetDir))
                 return;
 
-            // ƒGƒ‰[Fw’è‚ÌƒtƒHƒ‹ƒ_‚ª‘¶İ‚µ‚È‚¢
+            // ã‚¨ãƒ©ãƒ¼ï¼šæŒ‡å®šã®ãƒ•ã‚©ãƒ«ãƒ€ãŒå­˜åœ¨ã—ãªã„
             if (!Directory.Exists(targetDir))
                 return;
 
             //////////////////////////////
-            // sdkƒ^ƒCƒv‚Ìcsproj‚ğŒŸõ
+            // sdkã‚¿ã‚¤ãƒ—ã®csprojã‚’æ¤œç´¢
             //////////////////////////////
 
-            // w’èƒtƒHƒ‹ƒ_ˆÈ‰º‚Ìcsprojƒtƒ@ƒCƒ‹‚ğŒŸõ
+            // æŒ‡å®šãƒ•ã‚©ãƒ«ãƒ€ä»¥ä¸‹ã®csprojãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ¤œç´¢
             var ssef = new SearchSpecifiedExtFile(targetDir, targetExt);
             var foundList = ssef.Search();
 
-            // ƒGƒ‰[Fw’è‚ÌƒtƒHƒ‹ƒ_‚Ì’†‚Écsprojƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚ç‚È‚©‚Á‚½
+            // ã‚¨ãƒ©ãƒ¼ï¼šæŒ‡å®šã®ãƒ•ã‚©ãƒ«ãƒ€ã®ä¸­ã«csprojãƒ•ã‚¡ã‚¤ãƒ«ãŒè¦‹ã¤ã‹ã‚‰ãªã‹ã£ãŸ
             if (foundList.Count != 0)
             {
-                // Œ©‚Â‚©‚Á‚½“z‚ğ•\¦‚·‚é
+                // è¦‹ã¤ã‹ã£ãŸå¥´ã‚’è¡¨ç¤ºã™ã‚‹
                 foundList.ForEach(x =>
                 {
-                    // –{‚¿‚á‚ñ
+                    // æœ¬ã¡ã‚ƒã‚“
                     var reader = new SdkTypeCsprojHandler();
                     var data = reader.Read(x);
 
@@ -86,10 +88,10 @@ namespace FileVerUpTool
             }
 
             //////////////////////////////
-            // .netFramework‚ÌAssemblyInfo.cs‚ğŒŸõ
+            // .netFrameworkã®AssemblyInfo.csã‚’æ¤œç´¢
             //////////////////////////////
 
-            // w’èƒtƒHƒ‹ƒ_ˆÈ‰º‚Ìcsprojƒtƒ@ƒCƒ‹‚ğŒŸõ
+            // æŒ‡å®šãƒ•ã‚©ãƒ«ãƒ€ä»¥ä¸‹ã®csprojãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ¤œç´¢
             var ssef2 = new SearchSpecifiedExtFile(targetDir, "AssemblyInfo.cs");
             var foundList2 = ssef2.Search();
 
@@ -108,7 +110,7 @@ namespace FileVerUpTool
         }
 
 
-        // ‘‚«‚İƒ{ƒ^ƒ“
+        // æ›¸ãè¾¼ã¿ãƒœã‚¿ãƒ³
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             foreach (var data in DataList)
@@ -126,7 +128,7 @@ namespace FileVerUpTool
             }
         }
 
-        // ˆêŠ‡“ü—Í
+        // ä¸€æ‹¬å…¥åŠ›
         private void IkkatsuButton_Click(object sender, RoutedEventArgs e)
         {
             var ikkatsuType = IkkatsuType.SelectedValue as string;
@@ -134,33 +136,33 @@ namespace FileVerUpTool
 
             setvalue(ikkatsuType, val);
 
-            // w’è‚Ì€–Ú‚ğˆêŠ‡İ’è‚ğ‚·‚é
-            // ItemsSource‚É“ü‚ê‚½ƒŠƒXƒg‚ªXV‚³‚ê‚½‚Æ‚«‚ÉA‰æ–Ê‚ÌƒŠƒXƒg‚àXV‚µ‚Ä‚­‚ê‚éDataGrid.Refresh()‚İ‚½‚¢‚Èƒƒ\ƒbƒh‚ª
-            // –³‚©‚Á‚½‚Ì‚ÅA–³—‚â‚èƒRƒs[‚ğ‚Â‚­‚Á‚Ä“ü‚ê‘Ö‚¦‚Ä‚éB
+            // æŒ‡å®šã®é …ç›®ã‚’ä¸€æ‹¬è¨­å®šã‚’ã™ã‚‹
+            // ItemsSourceã«å…¥ã‚ŒãŸãƒªã‚¹ãƒˆãŒæ›´æ–°ã•ã‚ŒãŸã¨ãã«ã€ç”»é¢ã®ãƒªã‚¹ãƒˆã‚‚æ›´æ–°ã—ã¦ãã‚Œã‚‹DataGrid.Refresh()ã¿ãŸã„ãªãƒ¡ã‚½ãƒƒãƒ‰ãŒ
+            // ç„¡ã‹ã£ãŸã®ã§ã€ç„¡ç†ã‚„ã‚Šã‚³ãƒ”ãƒ¼ã‚’ã¤ãã£ã¦å…¥ã‚Œæ›¿ãˆã¦ã‚‹ã€‚
             void setvalue(string propName, string val)
             {
                 ObservableCollection<ModuleMetaData> tmp = new ObservableCollection<ModuleMetaData>();
 
-                // –³—‚â‚èƒRƒs[‚ğ‚Â‚­‚é
+                // ç„¡ç†ã‚„ã‚Šã‚³ãƒ”ãƒ¼ã‚’ã¤ãã‚‹
                 for (int i = 0; i < DataList.Count; i++)
                 {
                     tmp.Add(new ModuleMetaData(DataList[i].FileFullPath, DataList[i].Version, DataList[i].AssemblyVersion, DataList[i].Authors, DataList[i].Company,
                                                 DataList[i].Product, DataList[i].Copyright, DataList[i].Description, DataList[i].NeutralLanguage));
                 }
 
-                // ˆêŠ‡İ’è‚·‚é‚à‚Ì‚¾‚¯A–³—‚â‚è‘Scsproj•ª“ü‚ê‚Ä‚é
+                // ä¸€æ‹¬è¨­å®šã™ã‚‹ã‚‚ã®ã ã‘ã€ç„¡ç†ã‚„ã‚Šå…¨csprojåˆ†å…¥ã‚Œã¦ã‚‹
                 for (int i = 0; i < DataList.Count; i++)
                 {
                     typeof(ModuleMetaData).GetProperty(propName).SetValue(tmp[i], val);
                 }
 
-                // “ü‚ê‘Ö‚¦
+                // å…¥ã‚Œæ›¿ãˆ
                 CsprojDataGrid.ItemsSource = tmp;
             }
 
         }
 
-        // csproj‚ğ“Ç‚İ‘‚«‚·‚éƒNƒ‰ƒX
+        // csprojã‚’èª­ã¿æ›¸ãã™ã‚‹ã‚¯ãƒ©ã‚¹
         public interface IProjMetaDataHandler
         {
             ModuleMetaData? Read(string csprojPath);
@@ -182,7 +184,7 @@ namespace FileVerUpTool
                 string description = string.Empty;
                 string neutralLanguage = string.Empty;
 
-                // ‚Ü‚¸Acsproj‚ğ“Ç‚İ‚İA’†g‚Ì‘SƒeƒLƒXƒg‚ğ•Û‘¶i‚±‚¢‚Â‚ğ’uŠ·‚µ‚Ä‚¢‚­j
+                // ã¾ãšã€csprojã‚’èª­ã¿è¾¼ã¿ã€ä¸­èº«ã®å…¨ãƒ†ã‚­ã‚¹ãƒˆã‚’ä¿å­˜ï¼ˆã“ã„ã¤ã‚’ç½®æ›ã—ã¦ã„ãï¼‰
                 var lines = File.ReadAllLines(AssemblyInfoPath, System.Text.Encoding.UTF8);
 
                 foreach (var line in lines)
@@ -198,7 +200,7 @@ namespace FileVerUpTool
                     if (line.Contains("NeutralResourcesLanguage")) neutralLanguage = line.Split("\"")[1];
                 }
 
-                return new ModuleMetaData(AssemblyInfoPath, version, assemblyVersion, authors, company, product, copyright, description, neutralLanguage);
+                return new ModuleMetaData(AssemblyInfoPath, version, assemblyVersion, authors, company, product, copyright, description, neutralLanguage, pjName);
 
             }
 
@@ -209,18 +211,45 @@ namespace FileVerUpTool
 
                 var all = File.ReadAllText(data.FileFullPath, System.Text.Encoding.UTF8);
 
-                all = Regex.Replace(all, expBase + "AssemblyVersion" + expBase2, "[assembly: AssemblyVersion(\"" + data.Version + "\")]");
-                all = Regex.Replace(all, expBase + "AssemblyCompany" + expBase2, "[assembly: AssemblyCompany(\"" + data.Company + "\")]");
-                all = Regex.Replace(all, expBase + "AssemblyProduct" + expBase2, "[assembly: AssemblyProduct(\"" + data.Product + "\")]");
-                all = Regex.Replace(all, expBase + "AssemblyCopyright" + expBase2, "[assembly: AssemblyCopyright(\"" + data.Copyright + "\")]");
-                all = Regex.Replace(all, expBase + "AssemblyDescription" + expBase2, "[assembly: AssemblyDescription(\"" + data.Description + "\")]");
-                all = Regex.Replace(all, expBase + "NeutralResourcesLanguage" + expBase2, "[assembly: NeutralResourcesLanguage(\"" + data.NeutralLanguage + "\")]");
+                // æ›¸ãæ›ãˆã‚‹ãƒ‡ãƒ¼ã‚¿ã‚’ç”¨æ„
+                var items = new Collection<(string propName, string val)>()
+                {
+                    ("AssemblyVersion", data.Version),
+                    ("AssemblyCompany", data.Company),
+                    ("AssemblyProduct", data.Product),
+                    ("AssemblyCopyright", data.Copyright),
+                    ("AssemblyDescription", data.Description),
+                    ("NeutralResourcesLanguage", data.NeutralLanguage),
+                };
+
+                foreach (var item in items)
+                {
+                    if (string.IsNullOrEmpty(item.val))
+                        continue;//è¨­å®šã™ã¹ããƒ‡ãƒ¼ã‚¿ãŒãªã„å ´åˆã¯ãªã«ã‚‚ã—ãªã„
+
+                    var pattern = expBase + item.propName + expBase2;
+                    var val = "[assembly: " + item.propName + "(\"" + item.val + "\")]";
+
+                    // è©²å½“ã™ã‚‹é …ç›®ãŒã¾ã ãªã„å ´åˆã¯
+                    if (!Regex.IsMatch(all, pattern))
+                    {
+                        all += val + "\r\n";
+                    }
+
+                    all = Regex.Replace(all, pattern, val);
+                }
+                //all = Regex.Replace(all, expBase + "AssemblyVersion" + expBase2, "[assembly: AssemblyVersion(\"" + data.Version + "\")]");
+                //all = Regex.Replace(all, expBase + "AssemblyCompany" + expBase2, "[assembly: AssemblyCompany(\"" + data.Company + "\")]");
+                //all = Regex.Replace(all, expBase + "AssemblyProduct" + expBase2, "[assembly: AssemblyProduct(\"" + data.Product + "\")]");
+                //all = Regex.Replace(all, expBase + "AssemblyCopyright" + expBase2, "[assembly: AssemblyCopyright(\"" + data.Copyright + "\")]");
+                //all = Regex.Replace(all, expBase + "AssemblyDescription" + expBase2, "[assembly: AssemblyDescription(\"" + data.Description + "\")]");
+                //all = Regex.Replace(all, expBase + "NeutralResourcesLanguage" + expBase2, "[assembly: NeutralResourcesLanguage(\"" + data.NeutralLanguage + "\")]");
 
                 File.WriteAllText(data.FileFullPath, all);
             }
         }
 
-        // csproj‚ğ“Ç‚İ‘‚«‚·‚éƒNƒ‰ƒX
+        // csprojã‚’èª­ã¿æ›¸ãã™ã‚‹ã‚¯ãƒ©ã‚¹
         public class SdkTypeCsprojHandler : IProjMetaDataHandler
         {
             public SdkTypeCsprojHandler() { }
@@ -229,8 +258,8 @@ namespace FileVerUpTool
             {
                 XElement xml = XElement.Load(csprojPath);
 
-                // —~‚µ‚¢“z‚¾‚¯æ‚é
-                //#region —~‚µ‚¢“z‚¾‚¯æ‚é
+                // æ¬²ã—ã„å¥´ã ã‘å–ã‚‹
+                //#region æ¬²ã—ã„å¥´ã ã‘å–ã‚‹
                 var infos = xml.Elements("PropertyGroup");
 
                 if (infos is null)
@@ -258,10 +287,10 @@ namespace FileVerUpTool
 
             public void Write(ModuleMetaData data)
             {
-                // ‚Ü‚¸Acsproj‚ğ“Ç‚İ‚İA’†g‚Ì‘SƒeƒLƒXƒg‚ğ•Û‘¶i‚±‚¢‚Â‚ğ’uŠ·‚µ‚Ä‚¢‚­j
+                // ã¾ãšã€csprojã‚’èª­ã¿è¾¼ã¿ã€ä¸­èº«ã®å…¨ãƒ†ã‚­ã‚¹ãƒˆã‚’ä¿å­˜ï¼ˆã“ã„ã¤ã‚’ç½®æ›ã—ã¦ã„ãï¼‰
                 var all = File.ReadAllText(data.FileFullPath, System.Text.Encoding.UTF8);
 
-                // ‘‚«Š·‚¦‚éƒf[ƒ^‚ğ—pˆÓi‰¼j
+                // æ›¸ãæ›ãˆã‚‹ãƒ‡ãƒ¼ã‚¿ã‚’ç”¨æ„ï¼ˆä»®ï¼‰
                 var input = new Collection<(string, string)>()
                 {
                     ("Version", data.Version),
@@ -274,7 +303,7 @@ namespace FileVerUpTool
                     ("NeutralLanguage", data.NeutralLanguage),
                 };
 
-                // ’uŠ·À{
+                // ç½®æ›å®Ÿæ–½
                 all = SetValueForSpecifiedKey(all, input);
 
                 File.WriteAllText(data.FileFullPath, all);
@@ -305,21 +334,21 @@ namespace FileVerUpTool
                     if (string.IsNullOrEmpty(element.Value))
                         continue;
 
-                    // w’è‚Ì’l‚Å’u‚«Š·‚¦‚é
+                    // æŒ‡å®šã®å€¤ã§ç½®ãæ›ãˆã‚‹
                     //var pattern = "\\<Version\\>.*\\<\\/Version\\>";
                     var pattern = "\\<" + element.ElementName + "\\>.*\\<\\/" + element.ElementName + "\\>";
 
                     if (!Regex.IsMatch(all, pattern))
                     {
-                        // w’è‚Ìelement‚ª–³‚¯‚ê‚Î
-                        // ‚Æ‚è‚ ‚¦‚¸AÅ‰‚ÉŒ©‚Â‚¯‚½PropertyGroup‚ÌÅŒã‚ÌElement‚Æ‚µ‚ÄA–³—‚â‚èw’è‚ÌElement‚ğ“ü‚ê‚Ä‚â‚é
+                        // æŒ‡å®šã®elementãŒç„¡ã‘ã‚Œã°
+                        // ã¨ã‚Šã‚ãˆãšã€æœ€åˆã«è¦‹ã¤ã‘ãŸPropertyGroupã®æœ€å¾Œã®Elementã¨ã—ã¦ã€ç„¡ç†ã‚„ã‚ŠæŒ‡å®šã®Elementã‚’å…¥ã‚Œã¦ã‚„ã‚‹
                         var temp = new Regex("</PropertyGroup>");
                         var rep = "  <" + element.ElementName + "></" + element.ElementName + ">\r\n  </PropertyGroup>";
                         all = temp.Replace(all, rep, 1);
                     }
 
-                    // w’è‚Ì’l‚Å’uŠ·‚·‚é
-                    var replace = "<" + element.ElementName + ">" + element.Value + "</" + element.ElementName + ">";//‰¼
+                    // æŒ‡å®šã®å€¤ã§ç½®æ›ã™ã‚‹
+                    var replace = "<" + element.ElementName + ">" + element.Value + "</" + element.ElementName + ">";//ä»®
                     all = Regex.Replace(all, pattern, replace);
                 }
                 return all;
@@ -332,6 +361,7 @@ namespace FileVerUpTool
     public class ModuleMetaData 
     {
         public string FileFullPath { get; set; }
+        public string ProjectName { get; set; }//.NET Frameworkç”¨
         public string Version { get; set; }
         public string AssemblyVersion { get; set; }
         public string Authors { get; set; }
@@ -341,7 +371,7 @@ namespace FileVerUpTool
         public string Description { get; set; }
         public string NeutralLanguage { get; set; }
         public ModuleMetaData(string fileFullPath, string version, string assemblyVersion, string authors,
-                                string company, string product, string copyRight, string description, string neutralLanguage)
+                                string company, string product, string copyRight, string description, string neutralLanguage, string projectName = "")
         {
             FileFullPath = fileFullPath;
             Version = version;
@@ -352,10 +382,11 @@ namespace FileVerUpTool
             Copyright = copyRight;
             Description = description;
             NeutralLanguage = neutralLanguage;
+            ProjectName = projectName;
         }
     }
 
-    // w’èƒtƒHƒ‹ƒ_‚©‚çw’èŠg’£q‚Ìƒtƒ@ƒCƒ‹‚ğ’T‚µ‚ÄList‚É‚·‚éƒNƒ‰ƒX
+    // æŒ‡å®šãƒ•ã‚©ãƒ«ãƒ€ã‹ã‚‰æŒ‡å®šæ‹¡å¼µå­ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ¢ã—ã¦Listã«ã™ã‚‹ã‚¯ãƒ©ã‚¹
     public class SearchSpecifiedExtFile
     {
         private string _targetDirectoryFullPath = string.Empty;
@@ -381,12 +412,12 @@ namespace FileVerUpTool
             var parentDir = new DirectoryInfo(target);
             var files = parentDir.GetFiles(_targetExt);
 
-            // ‚»‚ÌŠK‘w‚É‚ ‚é‘ÎÛƒtƒ@ƒCƒ‹‚ğƒŠƒXƒg‚É“ü‚ê‚é
+            // ãã®éšå±¤ã«ã‚ã‚‹å¯¾è±¡ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ãƒªã‚¹ãƒˆã«å…¥ã‚Œã‚‹
             files.ToList().ForEach(x => foundList.Add(x.FullName));
 
-            // ‚»‚ÌŠK‘w‚É‚ ‚éƒtƒHƒ‹ƒ_‚ğ’T‚µA
+            // ãã®éšå±¤ã«ã‚ã‚‹ãƒ•ã‚©ãƒ«ãƒ€ã‚’æ¢ã—ã€
             var childDirs = parentDir.GetDirectories();
-            // ƒtƒHƒ‹ƒ_‚Ì’†‚ğ’T‚µ‚És‚­(Ä‹A“I‚É)
+            // ãƒ•ã‚©ãƒ«ãƒ€ã®ä¸­ã‚’æ¢ã—ã«è¡Œã(å†å¸°çš„ã«)
             foreach (var dir in childDirs)
             {
                 Search(dir.FullName);
@@ -401,8 +432,16 @@ namespace FileVerUpTool
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var fullPath = value as string;
-            return System.IO.Path.GetFileNameWithoutExtension(fullPath);
+            var data = value as ModuleMetaData;
+
+            if (System.IO.Path.GetExtension(data.FileFullPath) == ".csproj")
+            {
+                return System.IO.Path.GetFileNameWithoutExtension(data.FileFullPath);
+            }
+            else
+            {
+                return data.ProjectName;
+            }
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

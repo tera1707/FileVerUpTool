@@ -33,7 +33,7 @@
                 <local:FileFullPathToProjectName x:Key="FileFullPathToProjectName" />
             </controls:DataGrid.Resources>
             <controls:DataGrid.Columns>
-                <controls:DataGridTextColumn Header="Project" Binding="{Binding FileFullPath, Converter={StaticResource FileFullPathToProjectName}}" />
+                <controls:DataGridTextColumn Header="Project" Binding="{Binding Converter={StaticResource FileFullPathToProjectName}}" />
                 <controls:DataGridTextColumn Header="Version" Binding="{Binding Version}"/>
                 <controls:DataGridTextColumn Header="AssemblyVersion" Binding="{Binding AssemblyVersion}"/>
                 <controls:DataGridTextColumn Header="Authors" Binding="{Binding Authors}"/>
