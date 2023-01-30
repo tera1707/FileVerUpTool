@@ -102,7 +102,7 @@ namespace FileVerUpTool
                     var reader = new DotnetFrameworkProjHandler();
                     var data = reader.Read(x);
 
-                    if (data != null)
+                    if (data != null && !string.IsNullOrEmpty(data.ProjectName))
                         DataList.Add(data);
                 });
             }
