@@ -177,7 +177,7 @@ namespace FileVerUpTool
                 for (int i = 0; i < DataList.Count; i++)
                 {
                     tmp.Add(new ModuleMetaData(DataList[i].FileFullPath, DataList[i].Version, DataList[i].AssemblyVersion, DataList[i].FileVersion, DataList[i].Company,
-                                                DataList[i].Product, DataList[i].Copyright, DataList[i].Description, DataList[i].NeutralLanguage));
+                                                DataList[i].Product, DataList[i].Copyright, DataList[i].Description, DataList[i].NeutralLanguage, DataList[i].ProjectName));
                 }
 
                 // 一括設定するものだけ、無理やり全csproj分入れてる
@@ -310,6 +310,7 @@ namespace FileVerUpTool
                 var expBase2 = "\\(\".*\"\\)\\]";
 
                 var all = File.ReadAllText(data.FileFullPath, System.Text.Encoding.UTF8);
+                data.FileVersion = data.Version;// .NETFWは、FileVersionとVersionが同じ値。
 
                 // 書き換えるデータを用意
                 var items = new Collection<(string propName, string val)>()

@@ -34,7 +34,7 @@
             </controls:DataGrid.Resources>
             <controls:DataGrid.Columns>
                 <controls:DataGridTextColumn Header="Project" Binding="{Binding Converter={StaticResource FileFullPathToProjectName}}" />
-                <controls:DataGridTextColumn Header="ProductVersion" Binding="{Binding Version}"/>
+                <controls:DataGridTextColumn Header="Version" Binding="{Binding Version}"/>
                 <controls:DataGridTextColumn Header="FileVersion" Binding="{Binding FileVersion}"/>
                 <controls:DataGridTextColumn Header="AssemblyVersion" Binding="{Binding AssemblyVersion}"/>
                 <controls:DataGridTextColumn Header="Company" Binding="{Binding Company}"/>
@@ -54,8 +54,8 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <ComboBox x:Name="IkkatsuType" SelectedIndex="0" Margin="5">
                     <x:String>Version</x:String>
+                    <x:String>FileVersion</x:String>
                     <x:String>AssemblyVersion</x:String>
-                    <x:String>Authors</x:String>
                     <x:String>Company</x:String>
                     <x:String>Product</x:String>
                     <x:String>Description</x:String>
