@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.WinUI.UI.Controls;
+﻿using CommunityToolkit.WinUI.Helpers;
+using CommunityToolkit.WinUI.UI.Controls;
 using CommunityToolkit.WinUI.UI.Controls.Primitives;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Documents;
@@ -107,6 +108,25 @@ namespace FileVerUpTool
                 });
             }
 
+            //////////////////////////////
+            // C++のリソース.rcを検索
+            //////////////////////////////
+
+            // 指定フォルダ以下のcsprojファイルを検索
+            var ssef3 = new SearchSpecifiedExtFile(targetDir, "*.rc");
+            var foundList3 = ssef3.Search();
+
+            if (foundList3.Count != 0)
+            {
+                foundList3.ForEach(x =>
+                {
+                    var reader = new CppProjHandler();
+                    var data = reader.Read(x);
+
+                    if (data != null)
+                        DataList.Add(data);
+                });
+            }
         }
 
 
@@ -115,13 +135,23 @@ namespace FileVerUpTool
         {
             foreach (var data in DataList)
             {
-                if (System.IO.Path.GetExtension(data.FileFullPath) == ".csproj")
+                var ext = System.IO.Path.GetExtension(data.FileFullPath);
+
+                if (ext == ".csproj")
                 {
+                    // .net5-
                     var writer = new SdkTypeCsprojHandler();
+                    writer.Write(data);
+                }
+                else if (ext == ".rc")
+                {
+                    // CPP
+                    var writer = new CppProjHandler();
                     writer.Write(data);
                 }
                 else
                 {
+                    // .netFW
                     var writer = new DotnetFrameworkProjHandler();
                     writer.Write(data);
                 }
@@ -146,7 +176,7 @@ namespace FileVerUpTool
                 // 無理やりコピーをつくる
                 for (int i = 0; i < DataList.Count; i++)
                 {
-                    tmp.Add(new ModuleMetaData(DataList[i].FileFullPath, DataList[i].Version, DataList[i].AssemblyVersion, DataList[i].Authors, DataList[i].Company,
+                    tmp.Add(new ModuleMetaData(DataList[i].FileFullPath, DataList[i].Version, DataList[i].AssemblyVersion, DataList[i].FileVersion, DataList[i].Company,
                                                 DataList[i].Product, DataList[i].Copyright, DataList[i].Description, DataList[i].NeutralLanguage));
                 }
 
@@ -169,15 +199,86 @@ namespace FileVerUpTool
             void Write(ModuleMetaData data);
         }
 
+        public class CppProjHandler : IProjMetaDataHandler
+        {
+            public ModuleMetaData Read(string cppRcPath)
+            {
+                // まず、rc、中身の全テキストを保存（こいつを置換していく）
+                var lines = File.ReadAllLines(cppRcPath, System.Text.Encoding.UTF8);
+
+                string pjName = string.Empty;
+                string productVersion = string.Empty;
+                string assemblyVersion = string.Empty;
+                string fileVersion = string.Empty;
+                string company = string.Empty;
+                string product = string.Empty;
+                string copyright = string.Empty;
+                string description = string.Empty;
+
+                foreach (var line in lines)
+                {
+                    if (line.Contains("FileVersion")) fileVersion = line.Split("\"")[3];
+                    if (line.Contains("ProductVersion")) productVersion = line.Split("\"")[3];
+                    if (line.Contains("ProductName")) product = line.Split("\"")[3];
+                    if (line.Contains("CompanyName")) company = line.Split("\"")[3];
+                    if (line.Contains("FileDescription")) description = line.Split("\"")[3];
+                    if (line.Contains("LegalCopyright")) copyright = line.Split("\"")[3];
+                }
+
+                return new ModuleMetaData(cppRcPath, productVersion, assemblyVersion, fileVersion, company, product, copyright, description, "");
+            }
+
+            public void Write(ModuleMetaData data)
+            {
+                var expBase = "VALUE \"";
+                var expBase2 = "\", \".*\"";
+                var valBase = "VALUE \"";
+                var valBase2 = "\", \"";
+                var valBase3 = "\"";
+
+                var all = File.ReadAllText(data.FileFullPath, System.Text.Encoding.UTF8);
+
+                // 書き換えるデータを用意
+                var items = new Collection<(string propName, string val)>()
+                {
+                    ("FileVersion", data.FileVersion),
+                    ("ProductVersion", data.Version),
+                    ("CompanyName", data.Company),
+                    ("ProductName", data.Product),
+                    ("LegalCopyright", data.Copyright),
+                    ("FileDescription", data.Description),
+                };
+
+                foreach (var item in items)
+                {
+                    if (string.IsNullOrEmpty(item.val))
+                        continue;//設定すべきデータがない場合はなにもしない
+
+                    var pattern = expBase + item.propName + expBase2;
+                    var val = valBase + item.propName + valBase2 + item.val + valBase3;
+
+                    all = Regex.Replace(all, pattern, val);
+
+                    // バージョンだけ特別
+                    if (item.propName == "FileVersion")
+                        all = Regex.Replace(all, " FILEVERSION .*", " FILEVERSION " + item.val.Replace('.', ','));
+                    if (item.propName == "ProductVersion")
+                        all = Regex.Replace(all, " PRODUCTVERSION .*", " PRODUCTVERSION " + item.val.Replace('.', ','));
+                }
+
+                File.WriteAllText(data.FileFullPath, all);
+            }
+        }
+
+
         public class DotnetFrameworkProjHandler : IProjMetaDataHandler
         {
             public ModuleMetaData Read(string AssemblyInfoPath)
             {
                 //var metadata = new ModuleMetaData();
                 string pjName = string.Empty;
-                string version = string.Empty;
+                string fileversion = string.Empty;
                 string assemblyVersion = string.Empty;
-                string authors = string.Empty;
                 string company = string.Empty;
                 string product = string.Empty;
                 string copyright = string.Empty;
@@ -190,9 +291,8 @@ namespace FileVerUpTool
                 foreach (var line in lines)
                 {
                     if (line.Contains("AssemblyTitle")) pjName = line.Split("\"")[1];
-                    if (line.Contains("AssemblyVersion")) version = line.Split("\"")[1];
-                    //if (line.Contains("AssemblyVersion")) assemblyVersion = line.Split("\"")[1];
-                    if (line.Contains("AssemblyAuthors")) authors = line.Split("\"")[1];
+                    if (line.Contains("AssemblyVersion")) assemblyVersion = line.Split("\"")[1];
+                    if (line.Contains("AssemblyFileVersion")) fileversion = line.Split("\"")[1];// .netFWでは、製品VerとファイルVerがおなじ値になる
                     if (line.Contains("AssemblyCompany")) company = line.Split("\"")[1];
                     if (line.Contains("AssemblyProduct")) product = line.Split("\"")[1];
                     if (line.Contains("AssemblyCopyright")) copyright = line.Split("\"")[1];
@@ -200,7 +300,7 @@ namespace FileVerUpTool
                     if (line.Contains("NeutralResourcesLanguage")) neutralLanguage = line.Split("\"")[1];
                 }
 
-                return new ModuleMetaData(AssemblyInfoPath, version, assemblyVersion, authors, company, product, copyright, description, neutralLanguage, pjName);
+                return new ModuleMetaData(AssemblyInfoPath, fileversion, assemblyVersion, fileversion, company, product, copyright, description, neutralLanguage, pjName);
 
             }
 
@@ -214,7 +314,8 @@ namespace FileVerUpTool
                 // 書き換えるデータを用意
                 var items = new Collection<(string propName, string val)>()
                 {
-                    ("AssemblyVersion", data.Version),
+                    ("AssemblyFileVersion", data.FileVersion),
+                    ("AssemblyVersion", data.AssemblyVersion),
                     ("AssemblyCompany", data.Company),
                     ("AssemblyProduct", data.Product),
                     ("AssemblyCopyright", data.Copyright),
@@ -238,12 +339,6 @@ namespace FileVerUpTool
 
                     all = Regex.Replace(all, pattern, val);
                 }
-                //all = Regex.Replace(all, expBase + "AssemblyVersion" + expBase2, "[assembly: AssemblyVersion(\"" + data.Version + "\")]");
-                //all = Regex.Replace(all, expBase + "AssemblyCompany" + expBase2, "[assembly: AssemblyCompany(\"" + data.Company + "\")]");
-                //all = Regex.Replace(all, expBase + "AssemblyProduct" + expBase2, "[assembly: AssemblyProduct(\"" + data.Product + "\")]");
-                //all = Regex.Replace(all, expBase + "AssemblyCopyright" + expBase2, "[assembly: AssemblyCopyright(\"" + data.Copyright + "\")]");
-                //all = Regex.Replace(all, expBase + "AssemblyDescription" + expBase2, "[assembly: AssemblyDescription(\"" + data.Description + "\")]");
-                //all = Regex.Replace(all, expBase + "NeutralResourcesLanguage" + expBase2, "[assembly: NeutralResourcesLanguage(\"" + data.NeutralLanguage + "\")]");
 
                 File.WriteAllText(data.FileFullPath, all);
             }
@@ -272,16 +367,16 @@ namespace FileVerUpTool
 
                 var ver = ReturnNullIfThrowException(() => pg.Elements("Version"));
                 var aver = ReturnNullIfThrowException(() => pg.Elements("AssemblyVersion"));
-                var author = ReturnNullIfThrowException(() => pg.Elements("Authors"));
+                var fver = ReturnNullIfThrowException(() => pg.Elements("FileVersion"));
                 var company = ReturnNullIfThrowException(() => pg.Elements("Company"));
                 var product = ReturnNullIfThrowException(() => pg.Elements("Product"));
                 var description = ReturnNullIfThrowException(() => pg.Elements("Description"));
                 var copyright = ReturnNullIfThrowException(() => pg.Elements("Copyright"));
                 var newtralLang = ReturnNullIfThrowException(() => pg.Elements("NeutralLanguage"));
 
-                Debug.WriteLine($"{csprojPath}, {ver}, {aver}, {author}, {company}, {product}, {description}, {copyright}, {newtralLang}");
+                Debug.WriteLine($"{csprojPath}, {ver}, {aver}, {fver}, {company}, {product}, {description}, {copyright}, {newtralLang}");
 
-                return new ModuleMetaData(csprojPath, ver?.ToString(), aver?.ToString(), author?.ToString(), company?.ToString(),
+                return new ModuleMetaData(csprojPath, ver?.ToString(), aver?.ToString(), fver?.ToString(), company?.ToString(),
                                             product?.ToString(), copyright?.ToString(), description?.ToString(), newtralLang?.ToString());
             }
 
@@ -295,7 +390,7 @@ namespace FileVerUpTool
                 {
                     ("Version", data.Version),
                     ("AssemblyVersion", data.AssemblyVersion),
-                    ("Authors", data.Authors),
+                    ("FileVersion", data.FileVersion),
                     ("Company", data.Company),
                     ("Product", data.Product),
                     ("Description", data.Description),
@@ -364,19 +459,19 @@ namespace FileVerUpTool
         public string ProjectName { get; set; }//.NET Framework用
         public string Version { get; set; }
         public string AssemblyVersion { get; set; }
-        public string Authors { get; set; }
+        public string FileVersion { get; set; }
         public string Company { get; set; }
         public string Product { get; set; }
         public string Copyright { get; set; }
         public string Description { get; set; }
         public string NeutralLanguage { get; set; }
-        public ModuleMetaData(string fileFullPath, string version, string assemblyVersion, string authors,
+        public ModuleMetaData(string fileFullPath, string version, string assemblyVersion, string fileVersion,
                                 string company, string product, string copyRight, string description, string neutralLanguage, string projectName = "")
         {
             FileFullPath = fileFullPath;
             Version = version;
             AssemblyVersion = assemblyVersion;
-            Authors = authors;
+            FileVersion = fileVersion;
             Company = company;
             Product = product;
             Copyright = copyRight;
@@ -434,7 +529,9 @@ namespace FileVerUpTool
         {
             var data = value as ModuleMetaData;
 
-            if (System.IO.Path.GetExtension(data.FileFullPath) == ".csproj")
+            var ext = System.IO.Path.GetExtension(data.FileFullPath);
+
+            if (ext == ".csproj" || ext == ".rc")
             {
                 return System.IO.Path.GetFileNameWithoutExtension(data.FileFullPath);
             }
