@@ -72,8 +72,10 @@
                 <Button x:Name="IkkatsuButton" Margin="5" Click="IkkatsuButton_Click" Content=" Ikkatsu Settie Button" Background="DarkRed"/>
             </StackPanel>
         </StackPanel>
-        
 
+        <Grid x:Name="LoadingProgressRing" Grid.RowSpan="4" Background="#55000000" Visibility="Collapsed">
+            <ProgressRing />
+        </Grid>
 
     </Grid>
 </Window>

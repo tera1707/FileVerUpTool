@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using Windows.System;
 using Windows.UI.Popups;
@@ -50,112 +51,131 @@ namespace FileVerUpTool
         public ObservableCollection<ModuleMetaData> DataList { get; set; } = new ObservableCollection<ModuleMetaData>();
 
         // Readボタン押下時
-        private void myButton_Click(object sender, RoutedEventArgs e)
+        private async void myButton_Click(object sender, RoutedEventArgs e)
         {
+            LoadingProgressRing.Visibility = Visibility.Visible;
+
+            // タスク中で使用する仮リスト(直接別スレッド中でDataListに入れると例外になるので)
+            var tmp = new ObservableCollection<ModuleMetaData>();
+
             // 画面表示を一旦クリア
             DataList.Clear();
 
             var targetDir = TargetDirBox.Text;
 
-            // エラー：フォルダが指定されていない
-            if (string.IsNullOrEmpty(targetDir))
-                return;
-
-            // エラー：指定のフォルダが存在しない
-            if (!Directory.Exists(targetDir))
-                return;
-
-            //////////////////////////////
-            // sdkタイプのcsprojを検索
-            //////////////////////////////
-
-            // 指定フォルダ以下のcsprojファイルを検索
-            var ssef = new SearchSpecifiedExtFile(targetDir, targetExt);
-            var foundList = ssef.Search();
-
-            // エラー：指定のフォルダの中にcsprojファイルが見つからなかった
-            if (foundList.Count != 0)
+            await Task.Run(()=>
             {
-                // 見つかった奴を表示する
-                foundList.ForEach(x =>
+                // エラー：フォルダが指定されていない
+                if (string.IsNullOrEmpty(targetDir))
+                    return;
+
+                // エラー：指定のフォルダが存在しない
+                if (!Directory.Exists(targetDir))
+                    return;
+
+                //////////////////////////////
+                // sdkタイプのcsprojを検索
+                //////////////////////////////
+
+                // 指定フォルダ以下のcsprojファイルを検索
+                var ssef = new SearchSpecifiedExtFile(targetDir, targetExt);
+                var foundList = ssef.Search();
+
+                // エラー：指定のフォルダの中にcsprojファイルが見つからなかった
+                if (foundList.Count != 0)
                 {
-                    // 本ちゃん
-                    var reader = new SdkTypeCsprojHandler();
-                    var data = reader.Read(x);
+                    // 見つかった奴を表示する
+                    foundList.ForEach(x =>
+                    {
+                        // 本ちゃん
+                        var reader = new SdkTypeCsprojHandler();
+                        var data = reader.Read(x);
 
-                    if (data != null)
-                        DataList.Add(data);
-                });
-            }
+                        if (data != null)
+                            tmp.Add(data);
+                    });
+                }
 
-            //////////////////////////////
-            // .netFrameworkのAssemblyInfo.csを検索
-            //////////////////////////////
+                //////////////////////////////
+                // .netFrameworkのAssemblyInfo.csを検索
+                //////////////////////////////
 
-            // 指定フォルダ以下のcsprojファイルを検索
-            var ssef2 = new SearchSpecifiedExtFile(targetDir, "AssemblyInfo.cs");
-            var foundList2 = ssef2.Search();
+                // 指定フォルダ以下のcsprojファイルを検索
+                var ssef2 = new SearchSpecifiedExtFile(targetDir, "AssemblyInfo.cs");
+                var foundList2 = ssef2.Search();
 
-            if (foundList2.Count != 0)
-            {
-                foundList2.ForEach(x =>
+                if (foundList2.Count != 0)
                 {
-                    var reader = new DotnetFrameworkProjHandler();
-                    var data = reader.Read(x);
+                    foundList2.ForEach(x =>
+                    {
+                        var reader = new DotnetFrameworkProjHandler();
+                        var data = reader.Read(x);
 
-                    if (data != null && !string.IsNullOrEmpty(data.ProjectName))
-                        DataList.Add(data);
-                });
-            }
+                        if (data != null && !string.IsNullOrEmpty(data.ProjectName))
+                            tmp.Add(data);
+                    });
+                }
 
-            //////////////////////////////
-            // C++のリソース.rcを検索
-            //////////////////////////////
+                //////////////////////////////
+                // C++のリソース.rcを検索
+                //////////////////////////////
 
-            // 指定フォルダ以下のcsprojファイルを検索
-            var ssef3 = new SearchSpecifiedExtFile(targetDir, "*.rc");
-            var foundList3 = ssef3.Search();
+                // 指定フォルダ以下のcsprojファイルを検索
+                var ssef3 = new SearchSpecifiedExtFile(targetDir, "*.rc");
+                var foundList3 = ssef3.Search();
 
-            if (foundList3.Count != 0)
-            {
-                foundList3.ForEach(x =>
+                if (foundList3.Count != 0)
                 {
-                    var reader = new CppProjHandler();
-                    var data = reader.Read(x);
+                    foundList3.ForEach(x =>
+                    {
+                        var reader = new CppProjHandler();
+                        var data = reader.Read(x);
 
-                    if (data != null)
-                        DataList.Add(data);
-                });
-            }
+                        if (data != null)
+                            tmp.Add(data);
+                    });
+                }
+            });
+
+            // 画面表示のリストに入れる
+            tmp.ToList().ForEach(x => DataList.Add(x));
+
+            LoadingProgressRing.Visibility = Visibility.Collapsed;
         }
 
 
         // 書き込みボタン
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var data in DataList)
-            {
-                var ext = System.IO.Path.GetExtension(data.FileFullPath);
+            LoadingProgressRing.Visibility = Visibility.Visible;
 
-                if (ext == ".csproj")
+            await Task.Run(()=>
+            {
+                foreach (var data in DataList)
                 {
-                    // .net5-
-                    var writer = new SdkTypeCsprojHandler();
-                    writer.Write(data);
+                    var ext = System.IO.Path.GetExtension(data.FileFullPath);
+
+                    if (ext == ".csproj")
+                    {
+                        // .net5-
+                        var writer = new SdkTypeCsprojHandler();
+                        writer.Write(data);
+                    }
+                    else if (ext == ".rc")
+                    {
+                        // CPP
+                        var writer = new CppProjHandler();
+                        writer.Write(data);
+                    }
+                    else
+                    {
+                        // .netFW
+                        var writer = new DotnetFrameworkProjHandler();
+                        writer.Write(data);
+                    }
                 }
-                else if (ext == ".rc")
-                {
-                    // CPP
-                    var writer = new CppProjHandler();
-                    writer.Write(data);
-                }
-                else
-                {
-                    // .netFW
-                    var writer = new DotnetFrameworkProjHandler();
-                    writer.Write(data);
-                }
-            }
+            });
+            LoadingProgressRing.Visibility = Visibility.Collapsed;
         }
 
         // 一括入力
