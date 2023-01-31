@@ -11,7 +11,7 @@
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -27,7 +27,7 @@
         </Grid>
         
         <!-- csproj“à—e•\Ž¦ -->
-        <controls:DataGrid x:Name="CsprojDataGrid" Grid.Row="1" Margin="10" MinHeight="50"
+        <controls:DataGrid x:Name="CsprojDataGrid" Grid.Row="1" Margin="10" VerticalScrollBarVisibility="Visible"  
                            ItemsSource="{x:Bind DataList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" GridLinesVisibility="All">
             <controls:DataGrid.Resources>
                 <local:FileFullPathToProjectName x:Key="FileFullPathToProjectName" />
