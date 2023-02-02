@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FileVerUpTool.Interface;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,22 +10,20 @@ namespace FileVerUpTool.Model
 {
 
     // 指定フォルダから指定拡張子のファイルを探してListにするクラス
-    public class SearchSpecifiedExtFile
+    public class SearchSpecifiedExtFile : ISearchSpecifiedExtFile
     {
         private string _targetDirectoryFullPath = string.Empty;
-        private string _targetExt = "*.csproj";
+        private string _targetExt = "";
         private List<string> foundList = new();
 
-        private SearchSpecifiedExtFile() { }
+        public SearchSpecifiedExtFile() { }
 
-        public SearchSpecifiedExtFile(string targetDirectoryFullPath, string targetExt)
+        public List<string> Search(string targetDirectoryFullPath, string targetExt)
         {
+            foundList.Clear();
             _targetDirectoryFullPath = targetDirectoryFullPath;
             _targetExt = targetExt;
-        }
 
-        public List<string> Search()
-        {
             Search(_targetDirectoryFullPath);
             return foundList;
         }

@@ -62,6 +62,9 @@
             </Grid.ColumnDefinitions>            
             
             <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Ikkatsu Settei" HorizontalAlignment="Center"/>
+            
+            <!-- 一括設定する項目名リスト -->
+            <!-- このリストの中身が「ModuleMetaData」クラスのメンバプロパティの名前じゃないとダメ -->
             <ComboBox x:Name="IkkatsuType" Grid.Row="1" Grid.Column="0" SelectedIndex="0" Margin="5" HorizontalAlignment="Stretch">
                 <x:String>Version</x:String>
                 <x:String>FileVersion</x:String>

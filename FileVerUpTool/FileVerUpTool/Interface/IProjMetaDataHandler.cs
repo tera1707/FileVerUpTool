@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FileVerUpTool.Interface
 {
-    internal interface IProjMetaDataHandler
+    public interface IProjMetaDataHandler
     {
         ModuleMetaData? Read(string csprojPath);
         void Write(ModuleMetaData data);

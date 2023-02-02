@@ -1,6 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License.
 
+using FileVerUpTool.Interface;
+using FileVerUpTool.Logic;
+using FileVerUpTool.Model;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Toolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -44,8 +49,23 @@ namespace FileVerUpTool
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            m_window = new MainWindow();
-            m_window.Activate();
+            // ServiceCollectionを作成
+            var services = new ServiceCollection();
+
+            // インスタンスを登録
+            services.AddSingleton<IProjMetaDataHandler[]>(x => new IProjMetaDataHandler[] { new SdkTypeCsprojHandler(), new DotnetFrameworkProjHandler(), new CppProjHandler() });
+            services.AddSingleton<ISearchSpecifiedExtFile, SearchSpecifiedExtFile>();
+            services.AddSingleton<IVersionReadWrite, VersionReadWrite>();
+            services.AddSingleton<MainWindow>();
+
+            // サービスプロバイダ、サービスを作成
+            var provider = services.BuildServiceProvider();
+            Ioc.Default.ConfigureServices(provider);
+
+            // 登録したインスタンスを使う
+            var mw = Ioc.Default.GetRequiredService<MainWindow>();
+
+            mw.Activate();
         }
 
         private Window m_window;
