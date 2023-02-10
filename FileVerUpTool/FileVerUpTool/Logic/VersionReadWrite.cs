@@ -32,75 +32,32 @@ namespace FileVerUpTool.Logic
             // タスク中で使用する仮リスト(直接別スレッド中でDataListに入れると例外になるので)
             var tmp = new ObservableCollection<ModuleMetaData>();
 
-            //var targetDir = TargetDirBox.Text;
-
-            await Task.Run(() =>
+            (IProjMetaDataHandler Handler, string File, Func<ModuleMetaData, bool> AddJouken)[] tbl = 
             {
-                // エラー：フォルダが指定されていない
-                if (string.IsNullOrEmpty(targetDir))
-                    return;
+                (_sdkcsproj, "*.csproj", (x => x != null)),
+                (_dfwcsproj, "AssemblyInfo.cs", (x => x != null  && !string.IsNullOrEmpty(x.ProjectName))),
+                (_cppproj, "*.rc", (x => x != null)) 
+            };
 
-                // エラー：指定のフォルダが存在しない
-                if (!Directory.Exists(targetDir))
-                    return;
-
-                //////////////////////////////
-                // sdkタイプのcsprojを検索
-                //////////////////////////////
-
-                // 指定フォルダ以下のcsprojファイルを検索
-                var foundList = _finder.Search(targetDir, "*.csproj");
-
-                // エラー：指定のフォルダの中にcsprojファイルが見つからなかった
-                if (foundList.Count != 0)
+            await Task.Run(()=>
+            {
+                foreach (var t in tbl)
                 {
-                    // 見つかった奴を表示する
-                    foundList.ForEach(x =>
+                    // 指定フォルダ以下のcsprojファイルを検索
+                    var foundList = _finder.Search(targetDir, t.File);
+
+                    // エラー：指定のフォルダの中にcsprojファイルが見つからなかった
+                    if (foundList.Count != 0)
                     {
-                        // 本ちゃん
-                        //var reader = new SdkTypeCsprojHandler();
-                        var data = _sdkcsproj.Read(x);
+                        // 見つかった奴を表示する
+                        foundList.ForEach(x =>
+                        {
+                            var data = t.Handler.Read(x);
 
-                        if (data != null)
-                            tmp.Add(data);
-                    });
-                }
-
-                //////////////////////////////
-                // .netFrameworkのAssemblyInfo.csを検索
-                //////////////////////////////
-
-                // 指定フォルダ以下のcsprojファイルを検索
-                var foundList2 = _finder.Search(targetDir, "AssemblyInfo.cs");
-
-                if (foundList2.Count != 0)
-                {
-                    foundList2.ForEach(x =>
-                    {
-                        //var reader = new DotnetFrameworkProjHandler();
-                        var data = _dfwcsproj.Read(x);
-
-                        if (data != null && !string.IsNullOrEmpty(data.ProjectName))
-                            tmp.Add(data);
-                    });
-                }
-
-                //////////////////////////////
-                // C++のリソース.rcを検索
-                //////////////////////////////
-
-                // 指定フォルダ以下のcsprojファイルを検索
-                var foundList3 = _finder.Search(targetDir, "*.rc");
-
-                if (foundList3.Count != 0)
-                {
-                    foundList3.ForEach(x =>
-                    {
-                        var data = _cppproj.Read(x);
-
-                        if (data != null)
-                            tmp.Add(data);
-                    });
+                            if (t.AddJouken(data))
+                                tmp.Add(data);
+                        });
+                    }
                 }
             });
 
