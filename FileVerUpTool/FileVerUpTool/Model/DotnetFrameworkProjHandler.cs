@@ -45,7 +45,7 @@ namespace FileVerUpTool.Model
 
         public void Write(ModuleMetaData data)
         {
-            var expBase = "(^|(?<=\r\n))\\[assembly: ";
+            var expBase = "(^|(?<=\n))\\[assembly: ";
             var expBase2 = "\\(\".*\"\\)\\]";
 
             var all = File.ReadAllText(data.FileFullPath, System.Text.Encoding.UTF8);
