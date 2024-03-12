@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 
 namespace FileVerUpTool.Model
 {
+    public class WholeMetaData
+    {
+        public bool Visible { get; set; }
+
+        public ModuleMetaData Module { get; set; }
+    }
+
     public class ModuleMetaData
     {
         public string FileFullPath { get; set; }

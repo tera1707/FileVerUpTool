@@ -16,17 +16,19 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
+
         <!-- 読み込み -->
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
             <TextBox x:Name="TargetDirBox" PlaceholderText="Input Solution folder path." Margin="5"/>
-            <Button Grid.Column="1" Click="myButton_Click" Content="Read .csproj" Margin="5" Background="Blue"/>
+            <Button Grid.Column="1" Click="Button_Click_2" HorizontalAlignment="Stretch" Content="Show All Proj" Margin="5" Background="BlueViolet"/>
+            <Button Grid.Column="2" Click="myButton_Click" HorizontalAlignment="Stretch" Content="Save Visible Check And Hide Uncheck Proj" Margin="5" Background="Blue"/>
         </Grid>
-        
+
         <!-- csproj内容表示 -->
         <controls:DataGrid x:Name="CsprojDataGrid" Grid.Row="1" Margin="10" VerticalScrollBarVisibility="Visible"  
                            ItemsSource="{x:Bind DataList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" GridLinesVisibility="All">
@@ -34,54 +36,27 @@
                 <converter:FileFullPathToProjectName x:Key="FileFullPathToProjectName" />
             </controls:DataGrid.Resources>
             <controls:DataGrid.Columns>
-                <controls:DataGridTextColumn Header="Project" Binding="{Binding Converter={StaticResource FileFullPathToProjectName}}" />
-                <controls:DataGridTextColumn Header="Version" Binding="{Binding Version}"/>
-                <controls:DataGridTextColumn Header="FileVersion" Binding="{Binding FileVersion}"/>
-                <controls:DataGridTextColumn Header="AssemblyVersion" Binding="{Binding AssemblyVersion}"/>
-                <controls:DataGridTextColumn Header="Company" Binding="{Binding Company}"/>
-                <controls:DataGridTextColumn Header="Product" Binding="{Binding Product}"/>
-                <controls:DataGridTextColumn Header="Copyright" Binding="{Binding Copyright}"/>
-                <controls:DataGridTextColumn Header="Description" Binding="{Binding Description}"/>
-                <controls:DataGridTextColumn Header="NeutralLanguage" Binding="{Binding NeutralLanguage}"/>
+                <controls:DataGridCheckBoxColumn Header="Visible" Binding="{Binding Visible}" />
+                <controls:DataGridTextColumn Header="Project" Binding="{Binding Path=Module, Converter={StaticResource FileFullPathToProjectName}}" />
+                <controls:DataGridTextColumn Header="Version" Binding="{Binding Module.Version}"/>
+                <controls:DataGridTextColumn Header="FileVersion" Binding="{Binding Module.FileVersion}"/>
+                <controls:DataGridTextColumn Header="AssemblyVersion" Binding="{Binding Module.AssemblyVersion}"/>
+                <controls:DataGridTextColumn Header="Company" Binding="{Binding Module.Company}"/>
+                <controls:DataGridTextColumn Header="Product" Binding="{Binding Module.Product}"/>
+                <controls:DataGridTextColumn Header="Copyright" Binding="{Binding Module.Copyright}"/>
+                <controls:DataGridTextColumn Header="Description" Binding="{Binding Module.Description}"/>
+                <controls:DataGridTextColumn Header="NeutralLanguage" Binding="{Binding Module.NeutralLanguage}"/>
             </controls:DataGrid.Columns>
         </controls:DataGrid>
 
         <!-- 書き込み -->
-        <Button Click="Button_Click" Grid.Row="2" Content="Write .csproj" HorizontalAlignment="Stretch" Background="DarkOrange"/>
-        
-        <!-- 一括設定項目の種類選択Combo・入力Box -->
-        <Grid Grid.Row="3" BorderBrush="SpringGreen" BorderThickness="2" Margin="0,10">
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>            
-            
-            <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Ikkatsu Settei" HorizontalAlignment="Center"/>
-            
-            <!-- 一括設定する項目名リスト -->
-            <!-- このリストの中身が「ModuleMetaData」クラスのメンバプロパティの名前じゃないとダメ -->
-            <ComboBox x:Name="IkkatsuType" Grid.Row="1" Grid.Column="0" SelectedIndex="0" Margin="5" HorizontalAlignment="Stretch">
-                <x:String>Version</x:String>
-                <x:String>FileVersion</x:String>
-                <x:String>AssemblyVersion</x:String>
-                <x:String>Company</x:String>
-                <x:String>Product</x:String>
-                <x:String>Description</x:String>
-                <x:String>Copyright</x:String>
-                <x:String>NeutralLanguage</x:String>
-            </ComboBox>
-
-            <TextBox x:Name="IkkatsuValue" Grid.Row="2" Grid.Column="0" Margin="5" HorizontalAlignment="Stretch"/>
-            <Button x:Name="IkkatsuButton" Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Margin="5" Click="IkkatsuButton_Click" Content=" Ikkatsu Settie Button" Background="DarkRed"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <Grid Grid.Row="2">
+            <Button Click="Button_Click" Content="Write Proj Info" HorizontalAlignment="Stretch" Background="DarkOrange" Height="50"/>
         </Grid>
 
+        <!-- 読み書き中のプログレスリング -->
         <Grid x:Name="LoadingProgressRing" Grid.RowSpan="4" Background="#55000000" Visibility="Collapsed">
-            <ProgressRing />
+            <ProgressRing HorizontalAlignment="Stretch" Width="100" Height="100"/>
         </Grid>
     </Grid>
 </Window>

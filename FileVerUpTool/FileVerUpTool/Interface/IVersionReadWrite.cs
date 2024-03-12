@@ -10,8 +10,8 @@ namespace FileVerUpTool.Interface
 {
     public interface IVersionReadWrite
     {
-        Task<ObservableCollection<ModuleMetaData>> Read(string targetDir);
-        Task Write(ObservableCollection<ModuleMetaData> list);
-        ObservableCollection<ModuleMetaData> BulkSetOne(ObservableCollection<ModuleMetaData> currentList, string propName, string val);
+        Task<List<ModuleMetaData>> Read(string targetDir);
+        Task Write(List<ModuleMetaData> list);
+        List<ModuleMetaData> BulkSetOne(List<ModuleMetaData> currentList, string propName, string val);
     }
 }

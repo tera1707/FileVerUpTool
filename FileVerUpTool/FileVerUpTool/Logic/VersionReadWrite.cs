@@ -27,10 +27,10 @@ namespace FileVerUpTool.Logic
             _cppproj = handlers[2];
         }
 
-        public async Task<ObservableCollection<ModuleMetaData>> Read(string targetDir)
+        public async Task<List<ModuleMetaData>> Read(string targetDir)
         {
             // タスク中で使用する仮リスト(直接別スレッド中でDataListに入れると例外になるので)
-            var tmp = new ObservableCollection<ModuleMetaData>();
+            var tmp = new List<ModuleMetaData>();
 
             (IProjMetaDataHandler Handler, string File, Func<ModuleMetaData, bool> AddJouken)[] tbl = 
             {
@@ -64,7 +64,7 @@ namespace FileVerUpTool.Logic
             return tmp;
         }
 
-        public async Task Write(ObservableCollection<ModuleMetaData> list)
+        public async Task Write(List<ModuleMetaData> list)
         {
             await Task.Run(() =>
             {
@@ -103,9 +103,9 @@ namespace FileVerUpTool.Logic
         /// <param name="propName">一括設定したいModuleMetaDataのプロパティ名</param>
         /// <param name="val">一括設定したい値</param>
         /// <returns></returns>
-        public ObservableCollection<ModuleMetaData> BulkSetOne(ObservableCollection<ModuleMetaData> currentList, string propName, string val)
+        public List<ModuleMetaData> BulkSetOne(List<ModuleMetaData> currentList, string propName, string val)
         {
-            ObservableCollection<ModuleMetaData> tmp = new ObservableCollection<ModuleMetaData>();
+            List<ModuleMetaData> tmp = new List<ModuleMetaData>();
 
             // 無理やりコピーをつくる
             for (int i = 0; i < currentList.Count; i++)
