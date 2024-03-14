@@ -40,7 +40,18 @@ namespace FileVerUpTool.Model
 
         public void Add(string path)
         {
-            HideList.Add(path);
+            if (!HideList.Contains(path))
+            {
+                HideList.Add(path);
+            }
+        }
+
+        public void Remove(string path)
+        {
+            if (HideList.Contains(path))
+            {
+                HideList.Remove(path);
+            }
         }
 
         public void Clear()

@@ -28,6 +28,12 @@ namespace FileVerUpTool
             _logic = logic;
         }
 
+        // Readボタン押下時(非表示設定のPJも表示する)
+        private async void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            await ReadButton(true);
+        }
+
         // Readボタン押下時(非表示設定のPJは表示しない)
         private async void myButton_Click(object sender, RoutedEventArgs e)
         {
@@ -36,16 +42,23 @@ namespace FileVerUpTool
 
             // チェックがOFFになっている項目(=非表示にしたいプロジェクト)をファイルに保存
             _hidePJList.Clear();
-            DataList.Where(x => x.Visible == false).ToList().ForEach(x => _hidePJList.Add(x.Module.FileFullPath));
+            _hidePJList.LoadFromFile();
+
+            DataList.ToList().ForEach(x =>
+            {
+                if (x.Visible == true)
+                {
+                    _hidePJList.Remove(x.Module.FileFullPath);
+                }
+                else
+                {
+                    _hidePJList.Add(x.Module.FileFullPath);
+                }
+            });
+
             _hidePJList.SaveToFile();
 
             await ReadButton(false);
-        }
-
-        // Readボタン押下時(非表示設定のPJも表示する)
-        private async void Button_Click_2(object sender, RoutedEventArgs e)
-        {
-            await ReadButton(true);
         }
 
         //---------------------------------------------
@@ -90,10 +103,12 @@ namespace FileVerUpTool
         {
             LoadingProgressRing.Visibility = Visibility.Visible;
 
-            // 書き込み
+            // 書き込み(チェックの入っているPJだけ書き込み)
             await _logic.Write(DataList.Where(x => x.Visible == true).Select(x => x.Module).ToList());
 
             LoadingProgressRing.Visibility = Visibility.Collapsed;
         }
     }
 }
+
+
