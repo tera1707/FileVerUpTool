@@ -22,6 +22,8 @@ namespace FileVerUpTool
         {
             this.InitializeComponent();
 
+            Title = "File Ver Up Tool ver.20240317";
+
             _logic = logic;
         }
 
