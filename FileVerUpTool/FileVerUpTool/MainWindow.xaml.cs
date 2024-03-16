@@ -16,8 +16,6 @@ namespace FileVerUpTool
 
         public ObservableCollection<WholeData> DataList { get; set; } = new ObservableCollection<WholeData>();
 
-        private HideProjectList? _hidePJList;
-
         private MainWindow() { }
 
         public MainWindow(IVersionReadWrite logic)
@@ -36,7 +34,7 @@ namespace FileVerUpTool
         // 付加情報を保存
         private void myButton_Click(object sender, RoutedEventArgs e)
         {
-            ////////////////// この部分をクラス化必要（付加情報の読み書きクラス）
+            ////////////////// この部分をクラス化必要（付加情報の読み書きクラス）→logicに負荷情報保存クラスを設けてそこで負荷情報保存クラスを呼んでやる
             var tmp = string.Empty;
             var additionalInfoFilePath = System.IO.Path.Combine(TargetDirBox.Text, "AdditionalData.txt");
 
@@ -60,7 +58,7 @@ namespace FileVerUpTool
             DataList.Clear();
 
 
-            ////////////////// この部分をクラス化必要（付加情報の読み書きクラス）
+            ////////////////// この部分をクラス化必要（付加情報の読み書きクラス）→logicのReadの中に移動
             var additionalInfoFilePath = System.IO.Path.Combine(TargetDirBox.Text, "AdditionalData.txt");
 
             var additionalInfoList = new List<(string ProjFilePath, bool Visible, string Remark)>();
