@@ -16,6 +16,7 @@ namespace FileVerUpTool.Logic
         private IProjMetaDataHandler _sdkcsproj;
         private IProjMetaDataHandler _dfwcsproj;
         private IProjMetaDataHandler _cppproj;
+        private IProjMetaDataHandler _appxmanifest;
 
         private VersionReadWrite() { }
 
@@ -25,6 +26,7 @@ namespace FileVerUpTool.Logic
             _sdkcsproj = handlers[0];
             _dfwcsproj = handlers[1];
             _cppproj = handlers[2];
+            _appxmanifest = handlers[3];
         }
 
         public async Task<List<(string ProjDataFilePath, ModuleMetaData Module)>> Read(string targetDir)
@@ -36,7 +38,8 @@ namespace FileVerUpTool.Logic
             {
                 (_sdkcsproj, "*.csproj", (x => x != null)),
                 (_dfwcsproj, "AssemblyInfo.cs", (x => x != null  && !string.IsNullOrEmpty(x.ProjectName))),
-                (_cppproj, "*.rc", (x => x != null))
+                (_cppproj, "*.rc", (x => x != null)),
+                (_appxmanifest, "Package.appxmanifest", (x => x != null))
             };
 
             await Task.Run(() =>
@@ -84,10 +87,16 @@ namespace FileVerUpTool.Logic
                         var writer = new CppProjHandler();
                         writer.Write(data.ProjDataFilePath, data.Module);
                     }
-                    else
+                    else if (ext == ".cs")
                     {
                         // .netFW
                         var writer = new DotnetFrameworkProjHandler();
+                        writer.Write(data.ProjDataFilePath, data.Module);
+                    }
+                    else // appxmanifest
+                    {
+                        // .netFW
+                        var writer = new AppxManifestHandler();
                         writer.Write(data.ProjDataFilePath, data.Module);
                     }
                 }
