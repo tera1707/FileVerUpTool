@@ -42,14 +42,14 @@ namespace FileVerUpTool.Model
 
             Debug.WriteLine($"{csprojPath}, {ver}, {aver}, {fver}, {company}, {product}, {description}, {copyright}, {newtralLang}");
 
-            return new ModuleMetaData(csprojPath, ver?.ToString(), aver?.ToString(), fver?.ToString(), company?.ToString(),
+            return new ModuleMetaData(/*csprojPath,*/ ver?.ToString(), aver?.ToString(), fver?.ToString(), company?.ToString(),
                                         product?.ToString(), copyright?.ToString(), description?.ToString(), newtralLang?.ToString());
         }
 
-        public void Write(ModuleMetaData data)
+        public void Write(string projFilePath, ModuleMetaData data)
         {
             // まず、csprojを読み込み、中身の全テキストを保存（こいつを置換していく）
-            var all = File.ReadAllText(data.FileFullPath, System.Text.Encoding.UTF8);
+            var all = File.ReadAllText(projFilePath, System.Text.Encoding.UTF8);
 
             // 書き換えるデータを用意（仮）
             var input = new Collection<(string, string)>()
@@ -67,7 +67,7 @@ namespace FileVerUpTool.Model
             // 置換実施
             all = SetValueForSpecifiedKey(all, input);
 
-            File.WriteAllText(data.FileFullPath, all, new System.Text.UTF8Encoding(true));
+            File.WriteAllText(projFilePath, all, new System.Text.UTF8Encoding(true));
         }
 
         private string ReturnNullIfThrowException(Func<IEnumerable<XElement>> getElementFunc)

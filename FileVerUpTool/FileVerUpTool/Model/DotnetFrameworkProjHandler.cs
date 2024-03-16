@@ -39,16 +39,16 @@ namespace FileVerUpTool.Model
                 if (line.Contains("NeutralResourcesLanguage")) neutralLanguage = line.Split("\"")[1];
             }
 
-            return new ModuleMetaData(AssemblyInfoPath, fileversion, assemblyVersion, fileversion, company, product, copyright, description, neutralLanguage, pjName);
+            return new ModuleMetaData(/*AssemblyInfoPath,*/ fileversion, assemblyVersion, fileversion, company, product, copyright, description, neutralLanguage, pjName);
 
         }
 
-        public void Write(ModuleMetaData data)
+        public void Write(string projFilePath, ModuleMetaData data)
         {
             var expBase = "(^|(?<=\n))\\[assembly: ";
             var expBase2 = "\\(\".*\"\\)\\]";
 
-            var all = File.ReadAllText(data.FileFullPath, System.Text.Encoding.UTF8);
+            var all = File.ReadAllText(projFilePath, System.Text.Encoding.UTF8);
             data.FileVersion = data.Version;// .NETFWは、FileVersionとVersionが同じ値。
 
             // 書き換えるデータを用意
@@ -80,7 +80,7 @@ namespace FileVerUpTool.Model
                 all = Regex.Replace(all, pattern, val);
             }
 
-            File.WriteAllText(data.FileFullPath, all, new System.Text.UTF8Encoding(true));
+            File.WriteAllText(projFilePath, all, new System.Text.UTF8Encoding(true));
         }
     }
 }

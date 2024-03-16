@@ -26,7 +26,7 @@
             </Grid.ColumnDefinitions>
             <TextBox x:Name="TargetDirBox" PlaceholderText="Input Solution folder path." Margin="5"/>
             <Button Grid.Column="1" Click="Button_Click_2" HorizontalAlignment="Stretch" Content="Show All Proj" Margin="5" Background="BlueViolet"/>
-            <Button Grid.Column="2" Click="myButton_Click" HorizontalAlignment="Stretch" Content="Save Visible Check And Hide Uncheck Proj" Margin="5" Background="Blue"/>
+            <Button Grid.Column="2" Click="myButton_Click" HorizontalAlignment="Stretch" Content="Save Additional Info" Margin="5" Background="Blue"/>
         </Grid>
 
         <!-- csproj“à—e•\Ž¦ -->
@@ -36,8 +36,8 @@
                 <converter:FileFullPathToProjectName x:Key="FileFullPathToProjectName" />
             </controls:DataGrid.Resources>
             <controls:DataGrid.Columns>
-                <controls:DataGridCheckBoxColumn Header="Visible" Binding="{Binding Visible}" />
-                <controls:DataGridTextColumn Header="Project" Binding="{Binding Path=Module, Converter={StaticResource FileFullPathToProjectName}}" />
+                <controls:DataGridCheckBoxColumn Header="Visible" Binding="{Binding Additional.Visible}" />
+                <controls:DataGridTextColumn Header="Project" Binding="{Binding Converter={StaticResource FileFullPathToProjectName}}" />
                 <controls:DataGridTextColumn Header="Version" Binding="{Binding Module.Version}"/>
                 <controls:DataGridTextColumn Header="FileVersion" Binding="{Binding Module.FileVersion}"/>
                 <controls:DataGridTextColumn Header="AssemblyVersion" Binding="{Binding Module.AssemblyVersion}"/>
@@ -46,7 +46,8 @@
                 <controls:DataGridTextColumn Header="Copyright" Binding="{Binding Module.Copyright}"/>
                 <controls:DataGridTextColumn Header="Description" Binding="{Binding Module.Description}"/>
                 <controls:DataGridTextColumn Header="NeutralLanguage" Binding="{Binding Module.NeutralLanguage}"/>
-                <controls:DataGridTextColumn Header="ProjInfoFilePath" Binding="{Binding Module.FileFullPath}"/>
+                <controls:DataGridTextColumn Header="ProjInfoFilePath" Binding="{Binding ProjFilePath}"/>
+                <controls:DataGridTextColumn Header="Remark" Binding="{Binding Additional.Remark}"/>
             </controls:DataGrid.Columns>
         </controls:DataGrid>
 
@@ -61,4 +62,3 @@
         </Grid>
     </Grid>
 </Window>
-

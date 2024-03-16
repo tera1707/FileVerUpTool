@@ -31,10 +31,10 @@ namespace FileVerUpTool.Model
                 if (line.Contains("LegalCopyright")) copyright = line.Split("\"")[3];
             }
 
-            return new ModuleMetaData(cppRcPath, productVersion, assemblyVersion, fileVersion, company, product, copyright, description, "");
+            return new ModuleMetaData(/*cppRcPath,*/ productVersion, assemblyVersion, fileVersion, company, product, copyright, description, "");
         }
 
-        public void Write(ModuleMetaData data)
+        public void Write(string projFilePath, ModuleMetaData data)
         {
             var expBase = "VALUE \"";
             var expBase2 = "\", \".*\"";
@@ -42,7 +42,7 @@ namespace FileVerUpTool.Model
             var valBase2 = "\", \"";
             var valBase3 = "\"";
 
-            var all = File.ReadAllText(data.FileFullPath, System.Text.Encoding.UTF8);
+            var all = File.ReadAllText(projFilePath, System.Text.Encoding.UTF8);
 
             // 書き換えるデータを用意
             var items = new Collection<(string propName, string val)>()
@@ -72,7 +72,7 @@ namespace FileVerUpTool.Model
                     all = Regex.Replace(all, " PRODUCTVERSION .*", " PRODUCTVERSION " + item.val.Replace('.', ','));
             }
 
-            File.WriteAllText(data.FileFullPath, all, new System.Text.UTF8Encoding(true));
+            File.WriteAllText(projFilePath, all, new System.Text.UTF8Encoding(true));
         }
     }
 }

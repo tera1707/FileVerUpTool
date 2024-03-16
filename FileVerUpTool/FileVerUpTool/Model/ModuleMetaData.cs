@@ -6,16 +6,35 @@ using System.Threading.Tasks;
 
 namespace FileVerUpTool.Model
 {
-    public class WholeMetaData
+    public class WholeData
     {
-        public bool Visible { get; set; }
+        public string ProjFilePath { get; set; }
+
+        public AdditionalData Additional { get; set; }
 
         public ModuleMetaData Module { get; set; }
     }
 
+    public class AdditionalData
+    {
+        // 表示する/しない のチェック(true=チェック有り=表示/保存する)
+        public bool Visible { get; set; }
+
+        // 備考
+        public string Remark { get; set; }
+
+        public AdditionalData(bool visible, string remark)
+        {
+            Visible = visible;
+            Remark = remark;
+        }
+    }
+
+
+
     public class ModuleMetaData
     {
-        public string FileFullPath { get; set; }
+        //public string FileFullPath { get; set; }
         public string ProjectName { get; set; }//.NET Framework用
         public string Version { get; set; }
         public string AssemblyVersion { get; set; }
@@ -25,10 +44,10 @@ namespace FileVerUpTool.Model
         public string Copyright { get; set; }
         public string Description { get; set; }
         public string NeutralLanguage { get; set; }
-        public ModuleMetaData(string fileFullPath, string version, string assemblyVersion, string fileVersion,
+        public ModuleMetaData(/*string fileFullPath,*/ string version, string assemblyVersion, string fileVersion,
                                 string company, string product, string copyRight, string description, string neutralLanguage, string projectName = "")
         {
-            FileFullPath = fileFullPath;
+            //FileFullPath = fileFullPath;
             Version = version;
             AssemblyVersion = assemblyVersion;
             FileVersion = fileVersion;

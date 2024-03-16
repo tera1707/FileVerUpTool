@@ -10,6 +10,6 @@ namespace FileVerUpTool.Interface
     public interface IProjMetaDataHandler
     {
         ModuleMetaData? Read(string csprojPath);
-        void Write(ModuleMetaData data);
+        void Write(string projFilePath, ModuleMetaData data);
     }
 }

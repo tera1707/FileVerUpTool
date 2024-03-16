@@ -27,19 +27,19 @@ namespace FileVerUpTool.Logic
             _cppproj = handlers[2];
         }
 
-        public async Task<List<ModuleMetaData>> Read(string targetDir)
+        public async Task<List<(string ProjDataFilePath, ModuleMetaData Module)>> Read(string targetDir)
         {
             // タスク中で使用する仮リスト(直接別スレッド中でDataListに入れると例外になるので)
-            var tmp = new List<ModuleMetaData>();
+            var tmp = new List<(string, ModuleMetaData)>();
 
-            (IProjMetaDataHandler Handler, string File, Func<ModuleMetaData, bool> AddJouken)[] tbl = 
+            (IProjMetaDataHandler Handler, string File, Func<ModuleMetaData, bool> AddJouken)[] tbl =
             {
                 (_sdkcsproj, "*.csproj", (x => x != null)),
                 (_dfwcsproj, "AssemblyInfo.cs", (x => x != null  && !string.IsNullOrEmpty(x.ProjectName))),
-                (_cppproj, "*.rc", (x => x != null)) 
+                (_cppproj, "*.rc", (x => x != null))
             };
 
-            await Task.Run(()=>
+            await Task.Run(() =>
             {
                 foreach (var t in tbl)
                 {
@@ -55,7 +55,7 @@ namespace FileVerUpTool.Logic
                             var data = t.Handler.Read(x);
 
                             if (t.AddJouken(data))
-                                tmp.Add(data);
+                                tmp.Add((x, data));
                         });
                     }
                 }
@@ -64,31 +64,31 @@ namespace FileVerUpTool.Logic
             return tmp;
         }
 
-        public async Task Write(List<ModuleMetaData> list)
+        public async Task Write(List<(string ProjDataFilePath, ModuleMetaData Module)> list)
         {
             await Task.Run(() =>
             {
                 foreach (var data in list)
                 {
-                    var ext = System.IO.Path.GetExtension(data.FileFullPath);
+                    var ext = System.IO.Path.GetExtension(data.ProjDataFilePath);
 
                     if (ext == ".csproj")
                     {
                         // .net5-
                         var writer = new SdkTypeCsprojHandler();
-                        writer.Write(data);
+                        writer.Write(data.ProjDataFilePath, data.Module);
                     }
                     else if (ext == ".rc")
                     {
                         // CPP
                         var writer = new CppProjHandler();
-                        writer.Write(data);
+                        writer.Write(data.ProjDataFilePath, data.Module);
                     }
                     else
                     {
                         // .netFW
                         var writer = new DotnetFrameworkProjHandler();
-                        writer.Write(data);
+                        writer.Write(data.ProjDataFilePath, data.Module);
                     }
                 }
             });
@@ -103,24 +103,24 @@ namespace FileVerUpTool.Logic
         /// <param name="propName">一括設定したいModuleMetaDataのプロパティ名</param>
         /// <param name="val">一括設定したい値</param>
         /// <returns></returns>
-        public List<ModuleMetaData> BulkSetOne(List<ModuleMetaData> currentList, string propName, string val)
-        {
-            List<ModuleMetaData> tmp = new List<ModuleMetaData>();
+        //public List<ModuleMetaData> BulkSetOne(List<ModuleMetaData> currentList, string propName, string val)
+        //{
+        //    List<ModuleMetaData> tmp = new List<ModuleMetaData>();
 
-            // 無理やりコピーをつくる
-            for (int i = 0; i < currentList.Count; i++)
-            {
-                tmp.Add(new ModuleMetaData(currentList[i].FileFullPath, currentList[i].Version, currentList[i].AssemblyVersion, currentList[i].FileVersion, currentList[i].Company,
-                                            currentList[i].Product, currentList[i].Copyright, currentList[i].Description, currentList[i].NeutralLanguage, currentList[i].ProjectName));
-            }
+        //    // 無理やりコピーをつくる
+        //    for (int i = 0; i < currentList.Count; i++)
+        //    {
+        //        tmp.Add(new ModuleMetaData(currentList[i].FileFullPath, currentList[i].Version, currentList[i].AssemblyVersion, currentList[i].FileVersion, currentList[i].Company,
+        //                                    currentList[i].Product, currentList[i].Copyright, currentList[i].Description, currentList[i].NeutralLanguage, currentList[i].ProjectName));
+        //    }
 
-            // 一括設定するものだけ、無理やり全csproj分入れてる
-            // propNameは、画面の一括設定コンボボックスで選んだもの(=ModuleMetaDataのプロパティの名前。)
-            for (int i = 0; i < currentList.Count; i++)
-            {
-                typeof(ModuleMetaData).GetProperty(propName).SetValue(tmp[i], val);
-            }
-            return tmp;
-        }
+        //    // 一括設定するものだけ、無理やり全csproj分入れてる
+        //    // propNameは、画面の一括設定コンボボックスで選んだもの(=ModuleMetaDataのプロパティの名前。)
+        //    for (int i = 0; i < currentList.Count; i++)
+        //    {
+        //        typeof(ModuleMetaData).GetProperty(propName).SetValue(tmp[i], val);
+        //    }
+        //    return tmp;
+        //}
     }
 }

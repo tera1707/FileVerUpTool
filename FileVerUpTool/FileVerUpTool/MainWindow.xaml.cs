@@ -1,10 +1,9 @@
 ﻿using FileVerUpTool.Interface;
-using FileVerUpTool.Logic;
 using FileVerUpTool.Model;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Shapes;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +14,7 @@ namespace FileVerUpTool
     {
         private IVersionReadWrite _logic;// = new VersionReadWrite();
 
-        public ObservableCollection<WholeMetaData> DataList { get; set; } = new ObservableCollection<WholeMetaData>();
+        public ObservableCollection<WholeData> DataList { get; set; } = new ObservableCollection<WholeData>();
 
         private HideProjectList? _hidePJList;
 
@@ -28,42 +27,31 @@ namespace FileVerUpTool
             _logic = logic;
         }
 
-        // Readボタン押下時(非表示設定のPJも表示する)
+        // 全表示
         private async void Button_Click_2(object sender, RoutedEventArgs e)
         {
-            await ReadButton(true);
+            await ReadButton();
         }
 
-        // Readボタン押下時(非表示設定のPJは表示しない)
-        private async void myButton_Click(object sender, RoutedEventArgs e)
+        // 付加情報を保存
+        private void myButton_Click(object sender, RoutedEventArgs e)
         {
-            if (DataList is null || DataList.Count() == 0 || _hidePJList is null)
-                return;
-
-            // チェックがOFFになっている項目(=非表示にしたいプロジェクト)をファイルに保存
-            _hidePJList.Clear();
-            _hidePJList.LoadFromFile();
+            ////////////////// この部分をクラス化必要（付加情報の読み書きクラス）
+            var tmp = string.Empty;
+            var additionalInfoFilePath = System.IO.Path.Combine(TargetDirBox.Text, "AdditionalData.txt");
 
             DataList.ToList().ForEach(x =>
             {
-                if (x.Visible == true)
-                {
-                    _hidePJList.Remove(x.Module.FileFullPath);
-                }
-                else
-                {
-                    _hidePJList.Add(x.Module.FileFullPath);
-                }
+                tmp += x.ProjFilePath + "," + x.Additional.Visible + "," + x.Additional.Remark + "\r\n";
             });
 
-            _hidePJList.SaveToFile();
-
-            await ReadButton(false);
+            File.WriteAllText(additionalInfoFilePath, tmp, new System.Text.UTF8Encoding(true));
+            /////////////////////////////////////////////////////////////////////
         }
 
         //---------------------------------------------
 
-        private async Task ReadButton(bool showAll)
+        private async Task ReadButton()
         {
             var targetDir = TargetDirBox.Text;
 
@@ -71,28 +59,65 @@ namespace FileVerUpTool
             LoadingProgressRing.Visibility = Visibility.Visible;
             DataList.Clear();
 
-            // 非表示プロジェクト管理クラスを初期化
-            _hidePJList = new HideProjectList(TargetDirBox.Text);
-            _hidePJList.LoadFromFile();
 
+            ////////////////// この部分をクラス化必要（付加情報の読み書きクラス）
+            var additionalInfoFilePath = System.IO.Path.Combine(TargetDirBox.Text, "AdditionalData.txt");
+
+            var additionalInfoList = new List<(string ProjFilePath, bool Visible, string Remark)>();
+
+            if (File.Exists(additionalInfoFilePath))
+            {
+                using (var fs = new FileStream(additionalInfoFilePath, FileMode.Open))
+                using (var sr = new StreamReader(fs))
+                {
+                    while (sr.Peek() != -1)
+                    {
+                        var line = sr.ReadLine();
+                        var s = line.Split(',');
+                        additionalInfoList.Add((s[0], bool.Parse(s[1]), s[2]));
+                    }
+                }
+            }
+            /////////////////////////////////////////////////////////////////////
+            
             // バージョン情報読み込み
             var tmpList = await _logic.Read(targetDir);
 
+            Debug.WriteLine(tmpList.Count());
+
             tmpList.ToList().ForEach(x =>
             {
-                if (showAll)
+                var a = additionalInfoList.Where(y => x.ProjDataFilePath == y.ProjFilePath);
+
+                if (a.Any())
                 {
-                    // 全表示時：
-                    // →非表示リストにあるものは、Visubleチェックを外して表示する
-                    DataList.Add(new WholeMetaData() { Visible = _hidePJList.Contains(x.FileFullPath) ? false : true, Module = x });
+                    var adash = a.FirstOrDefault();
+
+                    DataList.Add(new WholeData()
+                    {
+                        ProjFilePath = x.ProjDataFilePath,
+                        Additional = new AdditionalData(adash.Visible, adash.Remark),
+                        Module = x.Module,
+                    });
                 }
-                else if (!_hidePJList.Contains(x.FileFullPath))
+                else
                 {
-                    // 非表示プロジェクトリストにあるPJは非表示時：
-                    // →非表示リストにあるものは表示しない
-                    DataList.Add(new WholeMetaData() { Visible = true, Module = x });
+                    DataList.Add(new WholeData()
+                    {
+                        ProjFilePath = x.ProjDataFilePath,
+                        Additional = new AdditionalData(true, ""),
+                        Module = x.Module,
+                    });
                 }
+
             });
+
+            // Visibleにチェックがついているものを前に持ってくる（見やすいように）
+            var tmp = DataList.OrderByDescending(x => x.Additional.Visible)
+                                .ThenByDescending(x => x.Module.ProjectName)
+                                .ToList();
+            DataList.Clear();
+            tmp.ForEach(x => DataList.Add(x));
 
             // くるくる終了
             LoadingProgressRing.Visibility = Visibility.Collapsed;
@@ -103,12 +128,15 @@ namespace FileVerUpTool
         {
             LoadingProgressRing.Visibility = Visibility.Visible;
 
-            // 書き込み(チェックの入っているPJだけ書き込み)
-            await _logic.Write(DataList.Where(x => x.Visible == true).Select(x => x.Module).ToList());
+            // VisibleチェックがついているもののModuleデータを保存する
+            var moduleDataList = DataList
+                                    .Where(x => x.Additional.Visible == true)
+                                    .Select(x => (x.ProjFilePath, x.Module))
+                                    .ToList();
+
+            await _logic.Write(moduleDataList);
 
             LoadingProgressRing.Visibility = Visibility.Collapsed;
         }
     }
 }
-
-
