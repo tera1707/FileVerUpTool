@@ -1,4 +1,5 @@
-﻿using FileVerUpTool.Interface;
+﻿using FileVerUpTool.Converter;
+using FileVerUpTool.Interface;
 using FileVerUpTool.Model;
 using Microsoft.UI.Xaml;
 using System.Collections.Generic;
@@ -120,7 +121,7 @@ namespace FileVerUpTool
 
             // Visibleにチェックがついているものを前に持ってくる（見やすいように）
             var tmp = DataList.OrderByDescending(x => x.Additional.Visible)
-                                .ThenByDescending(x => x.Module.ProjectName)
+                                .ThenBy(x => WholeDataToProjectName(x))
                                 .ToList();
             DataList.Clear();
             tmp.ForEach(x => DataList.Add(x));
@@ -144,5 +145,20 @@ namespace FileVerUpTool
 
             LoadingProgressRing.Visibility = Visibility.Collapsed;
         }
+
+        private string WholeDataToProjectName(WholeData x)
+        {
+            var ext = System.IO.Path.GetExtension(x.ProjFilePath);
+
+            if (ext == ".csproj" || ext == ".rc")
+            {
+                return System.IO.Path.GetFileNameWithoutExtension(x.ProjFilePath);
+            }
+            else
+            {
+                return x.Module.ProjectName;
+            }
+        }
+
     }
 }
