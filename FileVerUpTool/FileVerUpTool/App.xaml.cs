@@ -54,7 +54,6 @@ namespace FileVerUpTool
 
             // インスタンスを登録
             services.AddSingleton<IProjMetaDataHandler[]>(x => new IProjMetaDataHandler[] { new SdkTypeCsprojHandler(), new DotnetFrameworkProjHandler(), new CppProjHandler(), new AppxManifestHandler() });
-            services.AddSingleton<ISearchSpecifiedExtFile, SearchSpecifiedExtFile>();
             services.AddSingleton<IVersionReadWrite, VersionReadWrite>();
             services.AddSingleton<MainWindow>();
 

@@ -30,7 +30,13 @@ namespace FileVerUpTool
         // 全表示
         private async void Button_Click_2(object sender, RoutedEventArgs e)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Restart();
+
             await ReadButton();
+
+            sw.Stop();
+            Debug.WriteLine(" 経過時間：" + sw.ElapsedMilliseconds + " ms");
         }
 
         // 付加情報を保存

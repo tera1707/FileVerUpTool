@@ -72,16 +72,8 @@ namespace FileVerUpTool.Model
 
         private string ReturnNullIfThrowException(Func<IEnumerable<XElement>> getElementFunc)
         {
-            string ret = null;
-
-            try
-            {
-                ret = getElementFunc.Invoke().FirstOrDefault().Value;
-            }
-            catch (NullReferenceException)
-            {
-                ret = null;
-            }
+            var element = getElementFunc.Invoke().FirstOrDefault();
+            var ret = element != null ? element.Value : null;
 
             return ret;
         }

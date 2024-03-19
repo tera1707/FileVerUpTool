@@ -12,7 +12,6 @@ namespace FileVerUpTool.Logic
 {
     public class VersionReadWrite : IVersionReadWrite
     {
-        private ISearchSpecifiedExtFile _finder;
         private IProjMetaDataHandler _sdkcsproj;
         private IProjMetaDataHandler _dfwcsproj;
         private IProjMetaDataHandler _cppproj;
@@ -20,9 +19,8 @@ namespace FileVerUpTool.Logic
 
         private VersionReadWrite() { }
 
-        public VersionReadWrite(ISearchSpecifiedExtFile ssef, IProjMetaDataHandler[] handlers)
+        public VersionReadWrite(IProjMetaDataHandler[] handlers)
         {
-            _finder = ssef;
             _sdkcsproj = handlers[0];
             _dfwcsproj = handlers[1];
             _cppproj = handlers[2];
@@ -44,8 +42,10 @@ namespace FileVerUpTool.Logic
 
             await Task.Run(() =>
             {
-                foreach (var t in tbl)
+                Parallel.ForEach(tbl, t =>
                 {
+                    var _finder = new SearchSpecifiedExtFile();
+
                     // 指定フォルダ以下のcsprojファイルを検索
                     var foundList = _finder.Search(targetDir, t.File);
 
@@ -61,7 +61,7 @@ namespace FileVerUpTool.Logic
                                 tmp.Add((x, data));
                         });
                     }
-                }
+                });
             });
 
             return tmp;

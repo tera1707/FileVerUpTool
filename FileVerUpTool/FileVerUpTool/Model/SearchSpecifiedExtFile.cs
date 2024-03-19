@@ -31,18 +31,10 @@ namespace FileVerUpTool.Model
         private void Search(string target)
         {
             var parentDir = new DirectoryInfo(target);
-            var files = parentDir.GetFiles(_targetExt);
+            var files = parentDir.GetFiles(_targetExt, SearchOption.AllDirectories);
 
             // その階層にある対象ファイルをリストに入れる
             files.ToList().ForEach(x => foundList.Add(x.FullName));
-
-            // その階層にあるフォルダを探し、
-            var childDirs = parentDir.GetDirectories();
-            // フォルダの中を探しに行く(再帰的に)
-            foreach (var dir in childDirs)
-            {
-                Search(dir.FullName);
-            }
         }
     }
 }
