@@ -49,7 +49,7 @@ namespace FileVerUpTool.Model
         public void Write(string projFilePath, ModuleMetaData data)
         {
             // まず、csprojを読み込み、中身の全テキストを保存（こいつを置換していく）
-            var all = File.ReadAllText(projFilePath, System.Text.Encoding.UTF8);
+            var all = LoadFileConsideringEncoding.LoadAll(projFilePath);
 
             // 書き換えるデータを用意（仮）
             var input = new Collection<(string, string)>()
@@ -67,7 +67,7 @@ namespace FileVerUpTool.Model
             // 置換実施
             all = SetValueForSpecifiedKey(all, input);
 
-            File.WriteAllText(projFilePath, all, new System.Text.UTF8Encoding(true));
+            LoadFileConsideringEncoding.Save(projFilePath, all);
         }
 
         private string ReturnNullIfThrowException(Func<IEnumerable<XElement>> getElementFunc)

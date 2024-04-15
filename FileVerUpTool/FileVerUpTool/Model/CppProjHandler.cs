@@ -1,6 +1,7 @@
 ﻿using FileVerUpTool.Interface;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace FileVerUpTool.Model
@@ -10,7 +11,7 @@ namespace FileVerUpTool.Model
         public ModuleMetaData Read(string cppRcPath)
         {
             // まず、rc、中身の全テキストを保存（こいつを置換していく）
-            var lines = File.ReadAllLines(cppRcPath, System.Text.Encoding.UTF8);
+            var lines = LoadFileConsideringEncoding.LoadLines(cppRcPath);
 
             string pjName = string.Empty;
             string productVersion = string.Empty;
@@ -42,7 +43,7 @@ namespace FileVerUpTool.Model
             var valBase2 = "\", \"";
             var valBase3 = "\"";
 
-            var all = File.ReadAllText(projFilePath, System.Text.Encoding.UTF8);
+            var all = LoadFileConsideringEncoding.LoadAll(projFilePath);
 
             // 書き換えるデータを用意
             var items = new Collection<(string propName, string val)>()
@@ -72,7 +73,7 @@ namespace FileVerUpTool.Model
                     all = Regex.Replace(all, " PRODUCTVERSION .*", " PRODUCTVERSION " + item.val.Replace('.', ','));
             }
 
-            File.WriteAllText(projFilePath, all, new System.Text.UTF8Encoding(true));
+            LoadFileConsideringEncoding.Save(projFilePath, all);
         }
     }
 }

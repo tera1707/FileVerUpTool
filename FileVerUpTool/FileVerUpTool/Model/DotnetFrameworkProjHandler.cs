@@ -25,7 +25,7 @@ namespace FileVerUpTool.Model
             string neutralLanguage = string.Empty;
 
             // まず、csprojを読み込み、中身の全テキストを保存（こいつを置換していく）
-            var lines = File.ReadAllLines(AssemblyInfoPath, System.Text.Encoding.UTF8);
+            var lines = LoadFileConsideringEncoding.LoadLines(AssemblyInfoPath);
 
             foreach (var line in lines)
             {
@@ -48,7 +48,7 @@ namespace FileVerUpTool.Model
             var expBase = "(^|(?<=\n))\\[assembly: ";
             var expBase2 = "\\(\".*\"\\)\\]";
 
-            var all = File.ReadAllText(projFilePath, System.Text.Encoding.UTF8);
+            var all = LoadFileConsideringEncoding.LoadAll(projFilePath);
             data.FileVersion = data.Version;// .NETFWは、FileVersionとVersionが同じ値。
 
             // 書き換えるデータを用意
@@ -80,7 +80,7 @@ namespace FileVerUpTool.Model
                 all = Regex.Replace(all, pattern, val);
             }
 
-            File.WriteAllText(projFilePath, all, new System.Text.UTF8Encoding(true));
+            LoadFileConsideringEncoding.Save(projFilePath, all);
         }
     }
 }
