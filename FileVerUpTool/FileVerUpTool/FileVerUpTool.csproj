@@ -15,6 +15,7 @@
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsSdkPackageVersion>10.0.19041.38</WindowsSdkPackageVersion>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

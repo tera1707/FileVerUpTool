@@ -14,6 +14,7 @@ namespace FileVerUpTool
     public sealed partial class MainWindow : Window
     {
         private IVersionReadWrite _logic;// = new VersionReadWrite();
+        private IAdditionalInfoManager _additionalInfoManager = new AdditionalInfoManager();
 
         public ObservableCollection<WholeData> DataList { get; set; } = new ObservableCollection<WholeData>();
 
@@ -43,17 +44,7 @@ namespace FileVerUpTool
         // 付加情報を保存
         private void myButton_Click(object sender, RoutedEventArgs e)
         {
-            ////////////////// この部分をクラス化必要（付加情報の読み書きクラス）→logicに負荷情報保存クラスを設けてそこで負荷情報保存クラスを呼んでやる
-            var tmp = string.Empty;
-            var additionalInfoFilePath = System.IO.Path.Combine(TargetDirBox.Text, "AdditionalData.txt");
-
-            DataList.ToList().ForEach(x =>
-            {
-                tmp += x.ProjFilePath + "," + x.Additional.Visible + "," + x.Additional.Remark + "\r\n";
-            });
-
-            File.WriteAllText(additionalInfoFilePath, tmp, new System.Text.UTF8Encoding(true));
-            /////////////////////////////////////////////////////////////////////
+            _additionalInfoManager.Save(TargetDirBox.Text, DataList);
         }
 
         //---------------------------------------------
@@ -66,26 +57,8 @@ namespace FileVerUpTool
             LoadingProgressRing.Visibility = Visibility.Visible;
             DataList.Clear();
 
-
-            ////////////////// この部分をクラス化必要（付加情報の読み書きクラス）→logicのReadの中に移動
-            var additionalInfoFilePath = System.IO.Path.Combine(TargetDirBox.Text, "AdditionalData.txt");
-
-            var additionalInfoList = new List<(string ProjFilePath, bool Visible, string Remark)>();
-
-            if (File.Exists(additionalInfoFilePath))
-            {
-                using (var fs = new FileStream(additionalInfoFilePath, FileMode.Open))
-                using (var sr = new StreamReader(fs))
-                {
-                    while (sr.Peek() != -1)
-                    {
-                        var line = sr.ReadLine();
-                        var s = line.Split(',');
-                        additionalInfoList.Add((s[0], bool.Parse(s[1]), s[2]));
-                    }
-                }
-            }
-            /////////////////////////////////////////////////////////////////////
+            // 付加情報の読み込み
+            var additionalInfoList = _additionalInfoManager.Load(targetDir);
             
             // バージョン情報読み込み
             var tmpList = await _logic.Read(targetDir);
