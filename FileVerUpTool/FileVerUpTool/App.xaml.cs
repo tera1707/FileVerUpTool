@@ -40,7 +40,7 @@ namespace FileVerUpTool
         /// </summary>
         public App()
         {
-            this.InitializeComponent();
+            this.InitializeComponent(); 
         }
 
         /// <summary>
