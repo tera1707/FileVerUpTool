@@ -1,5 +1,6 @@
 ﻿using FileVerUpTool.Interface;
 using FileVerUpTool.Model;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,12 +20,16 @@ namespace FileVerUpTool.Logic
 
         private VersionReadWrite() { }
 
-        public VersionReadWrite(IProjMetaDataHandler[] handlers)
+        public VersionReadWrite(
+            [FromKeyedServices(nameof(SdkTypeCsprojHandler))] IProjMetaDataHandler sdk,
+            [FromKeyedServices(nameof(DotnetFrameworkProjHandler))] IProjMetaDataHandler dfw,
+            [FromKeyedServices(nameof(CppProjHandler))] IProjMetaDataHandler cpp,
+            [FromKeyedServices(nameof(AppxManifestHandler))] IProjMetaDataHandler appxm)
         {
-            _sdkcsproj = handlers[0];
-            _dfwcsproj = handlers[1];
-            _cppproj = handlers[2];
-            _appxmanifest = handlers[3];
+            _sdkcsproj = sdk;
+            _dfwcsproj = dfw;
+            _cppproj = cpp;
+            _appxmanifest = appxm;
         }
 
         public async Task<List<(string ProjDataFilePath, ModuleMetaData Module)>> Read(string targetDir)
