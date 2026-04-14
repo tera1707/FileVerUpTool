@@ -21,10 +21,10 @@ namespace FileVerUpTool.Logic
         private VersionReadWrite() { }
 
         public VersionReadWrite(
-            [FromKeyedServices(nameof(SdkTypeCsprojHandler))] IProjMetaDataHandler sdk,
-            [FromKeyedServices(nameof(DotnetFrameworkProjHandler))] IProjMetaDataHandler dfw,
-            [FromKeyedServices(nameof(CppProjHandler))] IProjMetaDataHandler cpp,
-            [FromKeyedServices(nameof(AppxManifestHandler))] IProjMetaDataHandler appxm)
+            [FromKeyedServices(typeof(SdkTypeCsprojHandler))] IProjMetaDataHandler sdk,
+            [FromKeyedServices(typeof(DotnetFrameworkProjHandler))] IProjMetaDataHandler dfw,
+            [FromKeyedServices(typeof(CppProjHandler))] IProjMetaDataHandler cpp,
+            [FromKeyedServices(typeof(AppxManifestHandler))] IProjMetaDataHandler appxm)
         {
             _sdkcsproj = sdk;
             _dfwcsproj = dfw;
