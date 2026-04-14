@@ -53,10 +53,10 @@ namespace FileVerUpTool
             var services = new ServiceCollection();
 
             // インスタンスを登録
-            services.AddKeyedTransient<IProjMetaDataHandler, SdkTypeCsprojHandler>(nameof(SdkTypeCsprojHandler));
-            services.AddKeyedTransient<IProjMetaDataHandler, DotnetFrameworkProjHandler>(nameof(DotnetFrameworkProjHandler));
-            services.AddKeyedTransient<IProjMetaDataHandler, CppProjHandler>(nameof(CppProjHandler));
-            services.AddKeyedTransient<IProjMetaDataHandler, AppxManifestHandler>(nameof(AppxManifestHandler));
+            services.AddKeyedTransient<IProjMetaDataHandler, SdkTypeCsprojHandler>(typeof(SdkTypeCsprojHandler));
+            services.AddKeyedTransient<IProjMetaDataHandler, DotnetFrameworkProjHandler>(typeof(DotnetFrameworkProjHandler));
+            services.AddKeyedTransient<IProjMetaDataHandler, CppProjHandler>(typeof(CppProjHandler));
+            services.AddKeyedTransient<IProjMetaDataHandler, AppxManifestHandler>(typeof(AppxManifestHandler));
 
             services.AddSingleton<IVersionReadWrite, VersionReadWrite>();
             services.AddSingleton<MainWindow>();
